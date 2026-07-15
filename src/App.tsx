@@ -7,12 +7,8 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Tất cả các trang nằm trong Route này sẽ dùng chung MainLayout */}
         <Route path="/" element={<MainLayout />}>
-          {/* path="/" tương ứng với Outlet, nghĩa là trang mặc định hiển thị */}
           <Route index element={<HomePage />} />
-          
-          {/* Bất kỳ URL nào gõ sai sẽ nhảy vào trang 404 */}
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
