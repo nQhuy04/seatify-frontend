@@ -1,6 +1,8 @@
 import { Play, Ticket, Clock, Globe, MessageCircle, Tags } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface MovieCardProps {
+  id: string | number;
   title: string;
   genre: string;
   posterUrl: string;
@@ -11,6 +13,7 @@ interface MovieCardProps {
 }
 
 const MovieCard = ({
+  id,
   title,
   genre,
   posterUrl,
@@ -20,7 +23,7 @@ const MovieCard = ({
   language = "Phụ đề Tiếng Việt",
 }: MovieCardProps) => {
   return (
-    <div className="flex flex-col gap-4 group">
+    <Link to={`movies/${id}`} className="flex flex-col gap-4 group">
       {/* 1. KHU VỰC POSTER */}
       <div className="relative rounded-2xl overflow-hidden cursor-pointer bg-slate-800 aspect-[2/3] w-full shadow-lg">
         {/* Ảnh Poster */}
@@ -80,7 +83,7 @@ const MovieCard = ({
           </button>
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 
