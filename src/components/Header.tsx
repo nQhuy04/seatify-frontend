@@ -1,7 +1,11 @@
 import { Search, User, Ticket, Clapperboard } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState } from "react";
+import AuthModal from "./AuthModal";
 
 const Header = () => {
+  // Khởi tạo state quản lý việc mở/đóng Modal (mặc định là false - đóng)
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   return (
     // bg-slate-900: Xanh đen than | shadow-md: Đổ bóng nhẹ phân cách với thân web
     <header className="sticky top-0 z-50 bg-slate-900 shadow-md text-slate-200">
@@ -44,7 +48,10 @@ const Header = () => {
 
           {/* Nút Đăng nhập & Đặt vé */}
           <div className="flex items-center gap-4">
-            <button className="flex items-center gap-2 hover:text-white transition-colors text-sm font-medium">
+            <button
+              onClick={() => setIsAuthModalOpen(true)}
+              className="flex items-center gap-2 hover:text-white transition-colors text-sm font-medium cursor-pointer"
+            >
               <User className="w-5 h-5" />
               <span className="hidden sm:inline">Đăng nhập</span>
             </button>
@@ -57,6 +64,11 @@ const Header = () => {
           </div>
         </div>
       </div>
+
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+      />
     </header>
   );
 };

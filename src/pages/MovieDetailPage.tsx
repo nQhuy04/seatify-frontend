@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import {
   Play,
   Tags,
@@ -59,23 +59,20 @@ const MOCK_MOVIE_DETAIL = {
 };
 
 const MovieDetailPage = () => {
-  // useParams: Lấy cái ID từ trên thanh URL xuống (VD: /movies/123 -> movieId = '123')
   const { movieId } = useParams();
 
   // Test trước vì bị lỗi Eslint
   console.log("ID của phim đang xem là:", movieId);
-  // State quản lý ngày đang chọn
+
   const [selectedDate, setSelectedDate] = useState("15/07");
 
-  const movie = MOCK_MOVIE_DETAIL; // Gán data giả vào biến movie
+  const movie = MOCK_MOVIE_DETAIL;
 
-  // Nếu muốn test trường hợp "Chưa có lịch chiếu", bạn hãy đổi cờ này thành true nhé!
   const isNoShowtime = false;
 
   return (
     <div className="-mt-8">
       {" "}
-      {/* Kéo xích lên để đè vào Header một xíu */}
       {/* KHỐI 1: BACKGROUND ĐIỆN ẢNH (CINEMATIC HERO) */}
       <div className="relative w-full py-16 md:py-24">
         {/* Lớp ảnh nền bị làm mờ */}
@@ -256,12 +253,13 @@ const MovieDetailPage = () => {
                         </p>
                         <div className="flex flex-wrap gap-3">
                           {room.times.map((time, tIndex) => (
-                            <button
+                            <Link
+                              to={`/booking/123`} // Tạm thời hardcode ID suất chiếu là 123
                               key={tIndex}
                               className="px-5 py-2.5 rounded-lg border border-slate-700 bg-slate-950 text-slate-200 font-bold hover:border-amber-500 hover:text-amber-500 transition-colors"
                             >
                               {time}
-                            </button>
+                            </Link>
                           ))}
                         </div>
                       </div>

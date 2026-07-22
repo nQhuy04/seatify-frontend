@@ -4,6 +4,7 @@ import HomePage from "./pages/HomePage";
 import NotFoundPage from "./pages/NotFoundPage";
 import MovieDetailPage from "./pages/MovieDetailPage";
 import ScrollToTop from "./components/ScrollToTop";
+import BookingPage from "./pages/BookingPage";
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="/" element={<MainLayout />}>
           <Route index element={<HomePage />} />
           <Route path="movies/:movieId" element={<MovieDetailPage />} />
+          <Route path="booking/:showtimeId" element={<BookingPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
