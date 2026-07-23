@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { fetchClient } from "../utils/apiClient";
 import {
   X,
   Mail,
@@ -9,6 +10,7 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
+import toast from "react-hot-toast";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -26,7 +28,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    confirmPassword: "", // Frontend tự check, không gửi xuống Backend
+    confirmPassword: "",
     fullName: "",
     phone: "",
     birthDay: "",
@@ -34,54 +36,89 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validation Đăng Nhập
-    if (activeTab === "login") {
-      if (!formData.email || !formData.password) {
-        alert("Vui lòng nhập Email và Mật khẩu!");
-        return;
-      }
-      console.log("Call API Login:", {
-        email: formData.email,
-        password: formData.password,
-      });
-    }
-    // Validation Đăng Ký
-    else {
-      if (
-        !formData.email ||
-        !formData.password ||
-        !formData.fullName ||
-        !formData.phone ||
-        !formData.birthDay
-      ) {
-        alert("Vui lòng điền đầy đủ thông tin!");
-        return;
-      }
-      if (formData.password !== formData.confirmPassword) {
-        alert("Mật khẩu xác nhận không khớp!");
-        return;
+    // --- REGEX KIỂM TRA ĐỊNH DẠNG ---
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // Mật khẩu: Tối thiểu 8 ký tự, ít nhất 1 chữ cái và 1 chữ số
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+
+    try {
+      // ==========================================
+      // XỬ LÝ ĐĂNG NHẬP
+      // ==========================================
+      if (activeTab === "login") {
+        if (!formData.email || !formData.password) {
+          return toast.error("Vui lòng nhập Email và Mật khẩu!");
+        }
+        if (!emailRegex.test(formData.email)) {
+          return toast.error("Định dạng Email không hợp lệ!");
+        }
+
+        // Gọi API
+        const response = await fetchClient("/auth/login", {
+          method: "POST",
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+          }),
+        });
+
+        localStorage.setItem("token", response.data.token);
+
+        toast.success("Đăng nhập thành công!"); // Thông báo
+        onClose();
       }
 
-      // Tạo object data gửi xuống Backend (Bỏ confirmPassword ra)
-      const submitData = {
-        email: formData.email,
-        password: formData.password,
-        fullName: formData.fullName,
-        phone: formData.phone,
-        birthDay: formData.birthDay, // Định dạng YYYY-MM-DD
-      };
-      console.log("Call API Register:", submitData);
-    }
+      // ==========================================
+      // XỬ LÝ ĐĂNG KÝ
+      // ==========================================
+      else {
+        if (
+          !formData.email ||
+          !formData.password ||
+          !formData.fullName ||
+          !formData.phone ||
+          !formData.birthDay
+        ) {
+          return toast.error("Vui lòng điền đầy đủ thông tin!");
+        }
+        if (!emailRegex.test(formData.email)) {
+          return toast.error("Định dạng Email không hợp lệ!");
+        }
+        if (!passwordRegex.test(formData.password)) {
+          return toast.error(
+            "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ và số!",
+          );
+        }
+        if (formData.password !== formData.confirmPassword) {
+          return toast.error("Mật khẩu xác nhận không khớp!");
+        }
 
-    alert(
-      activeTab === "login"
-        ? "Giả lập: Đăng nhập thành công!"
-        : "Giả lập: Đăng ký thành công!",
-    );
-    onClose();
+        // Bắn Data xuống BE
+        await fetchClient("/auth/register", {
+          method: "POST",
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+            fullName: formData.fullName,
+            phone: formData.phone,
+            birthDay: formData.birthDay,
+          }),
+        });
+
+        toast.success("Đăng ký thành công! Bạn có thể đăng nhập.");
+        setActiveTab("login");
+        setFormData({ ...formData, password: "", confirmPassword: "" });
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        toast.error(error.message); // Hứng lỗi từ BE và in ra Toast màu đỏ
+      } else {
+        toast.error("Có lỗi không xác định xảy ra!");
+      }
+    }
   };
 
   return (
