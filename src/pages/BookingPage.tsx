@@ -1,21 +1,43 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Minus, Plus, DoorOpen } from "lucide-react";
+import { fetchClient } from "../utils/apiClient";
+import toast from "react-hot-toast";
 import GuestCheckoutModal from "../components/GuestCheckoutModal";
-
-// --- MOCK DATA GHẾ ĐÃ BÁN ---
-const MOCK_BOOKED_SEATS = ["D8", "D9", "F11", "F12", "I5", "I6"];
 
 const BookingPage = () => {
   const { showtimeId } = useParams();
 
-  // 1. STATE QUẢN LÝ
+  // 1. STATE QUẢN LÝ VÉ & GHẾ CHỌN
   const [tickets, setTickets] = useState({ adult: 0, student: 0 });
   const totalTickets = tickets.adult + tickets.student;
-  const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const totalPrice = tickets.adult * 100000 + tickets.student * 80000;
+
+  const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [isGuestModalOpen, setIsGuestModalOpen] = useState(false);
 
+  // 2. STATE & API LẤY GHẾ ĐÃ BÁN (DATA THẬT)
+  const [bookedSeats, setBookedSeats] = useState<string[]>([]);
+  const [isLoadingSeats, setIsLoadingSeats] = useState(true);
+
+  useEffect(() => {
+    const fetchBookedSeats = async () => {
+      try {
+        setIsLoadingSeats(true);
+        // Gọi API thật lấy danh sách ghế bị khóa
+        const response = await fetchClient(`/showtimes/${showtimeId}/seats`);
+        setBookedSeats(response.data); // Data là mảng ['A1', 'B2']
+      } catch (error) {
+        if (error instanceof Error) toast.error(error.message);
+      } finally {
+        setIsLoadingSeats(false);
+      }
+    };
+
+    if (showtimeId) fetchBookedSeats();
+  }, [showtimeId]);
+
+  // 3. LOGIC TĂNG GIẢM VÉ
   const handleTicketChange = (
     type: "adult" | "student",
     operation: "increase" | "decrease",
@@ -27,13 +49,13 @@ const BookingPage = () => {
       const newTotal =
         prev.adult + prev.student + (operation === "increase" ? 1 : -1);
       if (operation === "increase" && newTotal > 8) {
-        alert("Bạn chỉ được mua tối đa 8 vé cho mỗi giao dịch!");
+        toast.error("Bạn chỉ được mua tối đa 8 vé cho mỗi giao dịch!");
         return prev;
       }
 
       if (operation === "decrease" && newTotal < selectedSeats.length) {
         setSelectedSeats([]);
-        alert(
+        toast.error(
           "Số vé ít hơn số ghế đã chọn. Hệ thống đã xóa ghế, vui lòng chọn lại!",
         );
       }
@@ -45,25 +67,27 @@ const BookingPage = () => {
     });
   };
 
+  // 4. LOGIC CLICK GHẾ
   const handleSeatClick = (seatId: string) => {
     if (totalTickets === 0) {
-      alert("Vui lòng chọn số lượng vé trước khi chọn ghế!");
+      toast.error("Vui lòng chọn số lượng vé trước khi chọn ghế!");
       return;
     }
 
-    if (MOCK_BOOKED_SEATS.includes(seatId)) return;
+    // So sánh với mảng data THẬT
+    if (bookedSeats.includes(seatId)) return;
 
     setSelectedSeats((prev) => {
       if (prev.includes(seatId)) return prev.filter((id) => id !== seatId);
       if (prev.length >= totalTickets) {
-        alert(`Bạn chỉ được chọn tối đa ${totalTickets} ghế!`);
+        toast.error(`Bạn chỉ được chọn tối đa ${totalTickets} ghế!`);
         return prev;
       }
       return [...prev, seatId];
     });
   };
 
-  // 2. THUẬT TOÁN ĐÚC GHẾ THEO KHỐI (BLOCK)
+  // 5. THUẬT TOÁN ĐÚC GHẾ THEO KHỐI (BLOCK)
   const renderSeats = (row: string, start: number, end: number) => {
     const seats = [];
     let i = start;
@@ -76,7 +100,8 @@ const BookingPage = () => {
         const seatId1 = `${row}${i}`;
         const seatId2 = `${row}${i + 1}`;
 
-        const isBooked1 = MOCK_BOOKED_SEATS.includes(seatId1);
+        // Kiểm tra ghế đã bán bằng DATA THẬT
+        const isBooked1 = bookedSeats.includes(seatId1);
         const isSelected1 = selectedSeats.includes(seatId1);
         let class1 =
           "bg-pink-900/20 border-pink-500/50 text-pink-500 hover:bg-pink-500/30";
@@ -87,7 +112,7 @@ const BookingPage = () => {
           class1 =
             "bg-amber-500 border-amber-500 text-slate-950 font-black shadow-lg shadow-amber-500/50 z-10";
 
-        const isBooked2 = MOCK_BOOKED_SEATS.includes(seatId2);
+        const isBooked2 = bookedSeats.includes(seatId2);
         const isSelected2 = selectedSeats.includes(seatId2);
         let class2 =
           "bg-pink-900/20 border-pink-500/50 text-pink-500 hover:bg-pink-500/30";
@@ -116,13 +141,15 @@ const BookingPage = () => {
             </button>
           </div>,
         );
-        i += 2; // Nhảy 2 bước vì đã vẽ 2 ghế
+        i += 2;
       }
       // LOGIC XỬ LÝ GHẾ THƯỜNG / VIP
       else {
         const seatId = `${row}${i}`;
         const isVIP = ["D", "E", "F", "G", "H", "I"].includes(row);
-        const isBooked = MOCK_BOOKED_SEATS.includes(seatId);
+
+        // Kiểm tra ghế đã bán bằng DATA THẬT
+        const isBooked = bookedSeats.includes(seatId);
         const isSelected = selectedSeats.includes(seatId);
 
         let seatClass =
@@ -154,9 +181,9 @@ const BookingPage = () => {
   };
 
   // Các nhóm hàng ghế
-  const rowsPart1 = ["A", "B", "C", "D"]; // Thường
-  const rowsPart2 = ["E", "F", "G", "H"]; // VIP (Vị trí trung tâm)
-  const rowsPart3 = ["I", "J"]; // Couple
+  const rowsPart1 = ["A", "B", "C", "D"];
+  const rowsPart2 = ["E", "F", "G", "H"];
+  const rowsPart3 = ["I", "J"];
 
   return (
     <div className="py-12 pb-40">
@@ -237,7 +264,16 @@ const BookingPage = () => {
         </div>
 
         {/* --- KHU VỰC 2: SƠ ĐỒ GHẾ --- */}
-        <div className="mb-16 bg-slate-900/50 p-6 sm:p-10 rounded-3xl border border-slate-800 overflow-x-auto">
+        <div className="mb-16 bg-slate-900/50 p-6 sm:p-10 rounded-3xl border border-slate-800 overflow-x-auto relative">
+          {/* Màn hình loading che sơ đồ khi đang tải data từ DB */}
+          {isLoadingSeats && (
+            <div className="absolute inset-0 bg-slate-950/80 z-20 flex flex-col items-center justify-center rounded-3xl backdrop-blur-sm">
+              <div className="text-amber-500 text-xl font-bold animate-pulse mb-2">
+                Đang tải dữ liệu ghế...
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-center mb-16">
             <h2 className="text-2xl font-black uppercase tracking-wider text-white border-b-4 border-amber-500 pb-2">
               2. Chọn Ghế
@@ -247,13 +283,11 @@ const BookingPage = () => {
           <div className="min-w-[800px] flex flex-col items-center">
             {/* ĐỒ HỌA MÀN HÌNH & CỬA VÀO */}
             <div className="w-full flex justify-center relative mb-20 mt-4">
-              {/* Màn hình cong */}
               <div className="w-3/4 max-w-2xl h-12 border-t-4 border-amber-500/50 rounded-[50%] flex items-start justify-center shadow-[0_-15px_30px_-15px_rgba(245,158,11,0.2)]">
                 <span className="text-slate-400 font-bold uppercase tracking-widest mt-2">
                   Màn Hình
                 </span>
               </div>
-              {/* Lối vào (Cửa) */}
               <div className="absolute right-4 sm:right-10 top-0 flex flex-col items-center border border-green-500/50 bg-green-500/10 text-green-500 px-4 py-2 rounded-lg shadow-[0_0_15px_rgba(34,197,94,0.1)]">
                 <DoorOpen className="w-6 h-6 mb-1" />
                 <span className="text-[10px] font-black uppercase tracking-wider">
@@ -262,9 +296,9 @@ const BookingPage = () => {
               </div>
             </div>
 
-            {/* KIẾN TRÚC 3 KHỐI (CHIA LỐI ĐI RÕ RÀNG) */}
+            {/* KIẾN TRÚC 3 KHỐI */}
             <div className="relative flex items-start justify-center gap-6 sm:gap-10 mx-auto w-fit">
-              {/* KHỐI 0: TÊN HÀNG (A, B, C...) */}
+              {/* KHỐI 0 */}
               <div className="absolute -left-8 sm:-left-12 flex flex-col gap-2">
                 <div className="flex flex-col gap-2">
                   {rowsPart1.map((r) => (
@@ -298,7 +332,7 @@ const BookingPage = () => {
                 </div>
               </div>
 
-              {/* KHỐI 1: BÊN TRÁI (Cột 1-4) */}
+              {/* KHỐI 1 */}
               <div className="flex flex-col gap-2">
                 <div className="flex flex-col gap-2">
                   {rowsPart1.map((r) => (
@@ -307,7 +341,6 @@ const BookingPage = () => {
                     </div>
                   ))}
                 </div>
-                {/* Lớp đệm giả py-3 để cân bằng chiều cao với Box Trung Tâm */}
                 <div className="flex flex-col gap-2 py-3 border-2 border-transparent">
                   {rowsPart2.map((r) => (
                     <div key={r} className="flex gap-2">
@@ -327,7 +360,7 @@ const BookingPage = () => {
                 </div>
               </div>
 
-              {/* KHỐI 2: Ở GIỮA (Cột 5-14) & VÒNG CHỮ NHẬT VỊ TRÍ VÀNG */}
+              {/* KHỐI 2 */}
               <div className="flex flex-col gap-2">
                 <div className="flex flex-col gap-2">
                   {rowsPart1.map((r) => (
@@ -336,8 +369,6 @@ const BookingPage = () => {
                     </div>
                   ))}
                 </div>
-
-                {/* HỘP SWEET SPOT (VỊ TRÍ TRUNG TÂM) */}
                 <div className="flex flex-col gap-2 py-3 border-2 border-dashed border-cyan-500/60 rounded-2xl relative bg-cyan-500/5 px-2 -mx-2">
                   {rowsPart2.map((r) => (
                     <div key={r} className="flex gap-2">
@@ -345,7 +376,6 @@ const BookingPage = () => {
                     </div>
                   ))}
                 </div>
-
                 <div className="flex flex-col gap-2">
                   {rowsPart3.map((r) => (
                     <div
@@ -358,7 +388,7 @@ const BookingPage = () => {
                 </div>
               </div>
 
-              {/* KHỐI 3: BÊN PHẢI (Cột 15-18) */}
+              {/* KHỐI 3 */}
               <div className="flex flex-col gap-2">
                 <div className="flex flex-col gap-2">
                   {rowsPart1.map((r) => (
@@ -427,10 +457,9 @@ const BookingPage = () => {
         </div>
       </div>
 
-      {/* --- KHU VỰC 3: THANH THANH TOÁN DÍNH ĐÁY (STICKY CHECKOUT BAR) --- */}
+      {/* --- KHU VỰC 3: THANH THANH TOÁN DÍNH ĐÁY --- */}
       <div className="fixed bottom-0 left-0 w-full bg-slate-900 border-t border-slate-800 shadow-[0_-10px_30px_rgba(0,0,0,0.5)] z-50">
         <div className="container mx-auto max-w-6xl px-4 h-24 flex items-center justify-between gap-4">
-          {/* Thông tin Phim & Rạp (Bên trái) */}
           <div className="hidden md:flex flex-col">
             <h3 className="text-white font-black uppercase tracking-wider text-lg">
               DEADPOOL & WOLVERINE (T18)
@@ -440,7 +469,6 @@ const BookingPage = () => {
             </p>
           </div>
 
-          {/* Đồng hồ & Số ghế đang chọn (Ở giữa) */}
           <div className="flex items-center gap-6">
             <div className="flex flex-col items-center bg-slate-950 px-4 py-1.5 rounded-lg border border-slate-800">
               <span className="text-[10px] text-slate-500 font-bold uppercase">
@@ -461,7 +489,6 @@ const BookingPage = () => {
             </div>
           </div>
 
-          {/* Tổng tiền & Nút Đặt vé (Bên phải) */}
           <div className="flex items-center gap-4 sm:gap-8">
             <div className="flex flex-col items-end">
               <span className="text-slate-400 text-sm">Tạm tính:</span>
@@ -471,7 +498,6 @@ const BookingPage = () => {
             </div>
 
             <button
-              // Kiểm tra điều kiện: Tổng vé > 0 VÀ Số ghế đã chọn BẰNG Tổng vé thì mới cho bấm
               disabled={
                 totalTickets === 0 || selectedSeats.length !== totalTickets
               }
