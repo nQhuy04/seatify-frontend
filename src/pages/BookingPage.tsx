@@ -11,14 +11,37 @@ const BookingPage = () => {
   // 1. STATE QUẢN LÝ VÉ & GHẾ CHỌN
   const [tickets, setTickets] = useState({ adult: 0, student: 0 });
   const totalTickets = tickets.adult + tickets.student;
-  const totalPrice = tickets.adult * 100000 + tickets.student * 80000;
 
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [isGuestModalOpen, setIsGuestModalOpen] = useState(false);
+  // state quản lý hiển thị popup khi chọn vé hssv
+  const [isStudentWarningOpen, setIsStudentWarningOpen] = useState(false);
 
   // 2. STATE & API LẤY GHẾ ĐÃ BÁN (DATA THẬT)
   const [bookedSeats, setBookedSeats] = useState<string[]>([]);
   const [isLoadingSeats, setIsLoadingSeats] = useState(true);
+
+  //3. THUẬT TOÁN TÍNH TIỀN ---
+  // Hàm kiểm tra một ghế thuộc loại gì và trả về tiền phụ thu
+  const getSeatSurcharge = (seatId: string): number => {
+    const row = seatId.charAt(0); // Lấy chữ cái đầu (A, B, C...)
+    if (["D", "E", "F", "G", "H", "I"].includes(row)) return 20000; // VIP: +20k
+    if (["J"].includes(row)) return 25000; // Couple: +25k/ghế
+    return 0; // Thường: Không phụ thu
+  };
+
+  // 1. Tính giá vé cơ bản (Base price)
+  const baseTicketPrice = tickets.adult * 80000 + tickets.student * 55000;
+
+  // 2. Tính tổng tiền phụ thu từ những ghế ĐANG CHỌN
+  // reduce là hàm gom mảng siêu việt của Javascript
+  const totalSurcharge = selectedSeats.reduce(
+    (sum, seatId) => sum + getSeatSurcharge(seatId),
+    0,
+  );
+
+  // 3. TỔNG TIỀN CUỐI CÙNG = Vé cơ bản + Phụ thu ghế
+  const totalPrice = baseTicketPrice + totalSurcharge;
 
   useEffect(() => {
     const fetchBookedSeats = async () => {
@@ -41,7 +64,19 @@ const BookingPage = () => {
   const handleTicketChange = (
     type: "adult" | "student",
     operation: "increase" | "decrease",
+    skipWarning = false,
   ) => {
+    // BẮT BỆNH HSSV: Nếu bấm Tăng vé HSSV, mà vé đang là 0, và chưa skipWarning -> Bật Popup!
+    if (
+      type === "student" &&
+      operation === "increase" &&
+      tickets.student === 0 &&
+      !skipWarning
+    ) {
+      setIsStudentWarningOpen(true);
+      return; // Dừng hàm lại, không cho tăng vé vội
+    }
+
     setTickets((prev) => {
       const currentCount = prev[type];
       if (operation === "decrease" && currentCount === 0) return prev;
@@ -212,7 +247,7 @@ const BookingPage = () => {
                 <h3 className="text-lg font-bold text-white uppercase">
                   Người Lớn
                 </h3>
-                <p className="text-amber-500 font-semibold mt-1">100,000 VNĐ</p>
+                <p className="text-amber-500 font-semibold mt-1">80,000 VNĐ</p>
               </div>
               <div className="flex items-center gap-4 bg-slate-950 p-2 rounded-xl border border-slate-800">
                 <button
@@ -239,7 +274,7 @@ const BookingPage = () => {
                 <h3 className="text-lg font-bold text-white uppercase">
                   HSSV - U22
                 </h3>
-                <p className="text-amber-500 font-semibold mt-1">80,000 VNĐ</p>
+                <p className="text-amber-500 font-semibold mt-1">55,000 VNĐ</p>
               </div>
               <div className="flex items-center gap-4 bg-slate-950 p-2 rounded-xl border border-slate-800">
                 <button
@@ -491,7 +526,11 @@ const BookingPage = () => {
 
           <div className="flex items-center gap-4 sm:gap-8">
             <div className="flex flex-col items-end">
-              <span className="text-slate-400 text-sm">Tạm tính:</span>
+              <span className="text-slate-400 text-xs font-medium">
+                {totalSurcharge > 0
+                  ? `+ Phụ thu ghế: ${totalSurcharge.toLocaleString("vi-VN")}đ`
+                  : "Tạm tính:"}
+              </span>
               <span className="text-2xl font-black text-white">
                 {totalPrice.toLocaleString("vi-VN")} VNĐ
               </span>
@@ -515,6 +554,52 @@ const BookingPage = () => {
         selectedSeats={selectedSeats}
         totalPrice={totalPrice}
       />
+
+      {/* MODAL CẢNH BÁO QUY ĐỊNH VÉ HSSV */}
+      {isStudentWarningOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl w-full max-w-md relative overflow-hidden transform transition-all p-8 sm:p-10 text-center">
+            <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <span className="text-amber-500 font-black text-2xl">!</span>
+            </div>
+
+            <h3 className="text-2xl font-black text-white uppercase tracking-wider mb-4">
+              Lưu ý hạng vé
+            </h3>
+
+            <p className="text-slate-400 mb-8 leading-relaxed text-sm">
+              Bạn đang mua hạng vé đặc biệt dành cho HSSV, U22. Vui lòng mang
+              theo{" "}
+              <span className="text-amber-500 font-bold">
+                CCCD hoặc Thẻ HSSV có dán ảnh
+              </span>{" "}
+              để xác minh tại quầy trước khi vào rạp.
+              <br />
+              <br />
+              Nhân viên rạp có quyền từ chối cho bạn vào xem nếu không thực hiện
+              đúng quy định này!
+            </p>
+
+            <div className="flex gap-4">
+              <button
+                onClick={() => setIsStudentWarningOpen(false)}
+                className="flex-1 py-3.5 rounded-xl font-bold border border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer"
+              >
+                HỦY
+              </button>
+              <button
+                onClick={() => {
+                  setIsStudentWarningOpen(false); // Tắt popup
+                  handleTicketChange("student", "increase", true); // Ép cộng 1 vé và bỏ qua cảnh báo
+                }}
+                className="flex-1 py-3.5 rounded-xl font-bold bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-lg hover:from-amber-500 hover:to-amber-400 transform transition-transform hover:-translate-y-1 cursor-pointer"
+              >
+                ĐỒNG Ý
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
