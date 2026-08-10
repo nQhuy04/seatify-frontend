@@ -1,11 +1,16 @@
 import { useState } from "react";
-import { X, Mail, User, Phone, Ticket } from "lucide-react";
+import { X, Mail, User, Phone, Ticket, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { fetchClient } from "../utils/apiClient";
+import toast from "react-hot-toast";
 
+// 1. Thêm thuộc tính showtimeId vào khuôn Props
 interface GuestCheckoutModalProps {
   isOpen: boolean;
   onClose: () => void;
   selectedSeats: string[];
   totalPrice: number;
+  showtimeId: string; // <-- THÊM CÁI NÀY ĐỂ TRUYỀN XUỐNG BE
 }
 
 const GuestCheckoutModal = ({
@@ -13,7 +18,11 @@ const GuestCheckoutModal = ({
   onClose,
   selectedSeats,
   totalPrice,
+  showtimeId,
 }: GuestCheckoutModalProps) => {
+  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false); // Trạng thái đang gọi API
+
   const [guestData, setGuestData] = useState({
     fullName: "",
     email: "",
@@ -22,25 +31,49 @@ const GuestCheckoutModal = ({
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!guestData.fullName || !guestData.email || !guestData.phone) {
-      alert("Vui lòng điền đầy đủ thông tin để nhận vé!");
+      toast.error("Vui lòng điền đầy đủ thông tin để nhận vé!");
       return;
     }
 
-    // Tuần 4 ta sẽ gọi API Webhook thanh toán ở đây
-    console.log("Thông tin khách vãng lai:", guestData);
-    alert("Chuyển hướng sang cổng thanh toán VNPay...");
-    onClose();
+    // 2. GỌI API KHÓA GHẾ XUỐNG BACKEND
+    try {
+      setIsLoading(true);
+      const response = await fetchClient("/bookings/hold", {
+        method: "POST",
+        body: JSON.stringify({
+          showtimeId: showtimeId,
+          seatNames: selectedSeats,
+          guestInfo: guestData,
+          totalPrice: totalPrice,
+        }),
+      });
+
+      // 3. THÀNH CÔNG: Chuyển hướng sang trang Thanh Toán kèm theo ID Hóa đơn thật!
+      toast.success("Giữ ghế thành công!");
+      onClose();
+      navigate(`/checkout/${response.data.id}`);
+    } catch (error) {
+      // 4. THẤT BẠI (Ghế bị giật mất): Báo lỗi và đóng form để khách chọn lại
+      if (error instanceof Error) {
+        toast.error(error.message);
+      }
+      onClose();
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
       <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl w-full max-w-lg relative overflow-hidden transform transition-all">
+        {/* Nút Đóng */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-amber-500 transition-colors cursor-pointer p-2"
+          disabled={isLoading}
+          className="absolute top-4 right-4 text-slate-400 hover:text-amber-500 transition-colors cursor-pointer p-2 disabled:opacity-50"
         >
           <X className="w-6 h-6" />
         </button>
@@ -59,7 +92,6 @@ const GuestCheckoutModal = ({
             mã QR.
           </p>
 
-          {/* Hóa đơn tóm tắt */}
           <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 mb-6 flex justify-between items-center">
             <div>
               <p className="text-slate-500 text-xs font-bold uppercase mb-1">
@@ -127,9 +159,16 @@ const GuestCheckoutModal = ({
 
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-amber-600 to-amber-500 text-white font-bold uppercase tracking-wider py-4 rounded-xl hover:from-amber-500 hover:to-amber-400 transition-all transform hover:-translate-y-1 shadow-lg hover:shadow-amber-500/25 mt-4 cursor-pointer"
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-600 to-amber-500 text-white font-bold uppercase tracking-wider py-4 rounded-xl hover:from-amber-500 hover:to-amber-400 transition-all transform hover:-translate-y-1 shadow-lg hover:shadow-amber-500/25 mt-4 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
             >
-              TIẾN HÀNH THANH TOÁN
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" /> ĐANG KHÓA GHẾ...
+                </>
+              ) : (
+                "TIẾN HÀNH THANH TOÁN"
+              )}
             </button>
           </form>
         </div>

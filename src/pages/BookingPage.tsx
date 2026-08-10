@@ -553,6 +553,7 @@ const BookingPage = () => {
         onClose={() => setIsGuestModalOpen(false)}
         selectedSeats={selectedSeats}
         totalPrice={totalPrice}
+        showtimeId={showtimeId as string}
       />
 
       {/* MODAL CẢNH BÁO QUY ĐỊNH VÉ HSSV */}
