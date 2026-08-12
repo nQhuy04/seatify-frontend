@@ -11,6 +11,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import { useAuth } from "../contexts/AuthContext";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -33,6 +34,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     phone: "",
     birthDay: "",
   });
+  const { login } = useAuth();
 
   if (!isOpen) return null;
 
@@ -65,9 +67,11 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
           }),
         });
 
-        localStorage.setItem("token", response.data.token);
-
-        toast.success("Đăng nhập thành công!"); // Thông báo
+        // Lấy thông tin user và token từ BE trả về, ném vào hàm login
+        login(response.data.user, response.data.token);
+        toast.success(
+          `Đăng nhập thành công! Chào ${response.data.user.fullName}`,
+        );
         onClose();
       }
 

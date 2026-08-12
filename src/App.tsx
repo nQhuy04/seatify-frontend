@@ -6,21 +6,26 @@ import MovieDetailPage from "./pages/MovieDetailPage";
 import ScrollToTop from "./components/ScrollToTop";
 import BookingPage from "./pages/BookingPage";
 import CheckoutPage from "./pages/CheckoutPage";
+import { AuthProvider } from "./contexts/AuthContext";
+import ProfilePage from "./pages/ProfilePage";
 
 function App() {
   return (
-    <BrowserRouter>
-      <ScrollToTop />
-      <Routes>
-        <Route path="/" element={<MainLayout />}>
-          <Route index element={<HomePage />} />
-          <Route path="movies/:movieId" element={<MovieDetailPage />} />
-          <Route path="booking/:showtimeId" element={<BookingPage />} />
-          <Route path="checkout/:bookingId" element={<CheckoutPage />} />
-          <Route path="*" element={<NotFoundPage />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <ScrollToTop />
+        <Routes>
+          <Route path="/" element={<MainLayout />}>
+            <Route index element={<HomePage />} />
+            <Route path="movies/:movieId" element={<MovieDetailPage />} />
+            <Route path="booking/:showtimeId" element={<BookingPage />} />
+            <Route path="checkout/:bookingId" element={<CheckoutPage />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 
