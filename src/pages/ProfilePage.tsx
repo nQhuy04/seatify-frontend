@@ -12,6 +12,21 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { fetchClient } from "../utils/apiClient";
+
+// Khuôn dữ liệu cho Lịch sử hóa đơn
+interface BookingHistoryItem {
+  id: string;
+  totalPrice: number;
+  status: string;
+  createdAt: string;
+  ticketSeats: {
+    showtime: {
+      movie: { title: string };
+      room: { cinema: { name: string } };
+    };
+  }[];
+}
 
 const ProfilePage = () => {
   const { user, logout } = useAuth();
@@ -34,6 +49,10 @@ const ProfilePage = () => {
     confirmPassword: "",
   });
 
+  // State lưu trữ lịch sử đặt vé
+  const [historyData, setHistoryData] = useState<BookingHistoryItem[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+
   // State quản lý Popup xác nhận Đăng xuất
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
@@ -44,6 +63,25 @@ const ProfilePage = () => {
       navigate("/");
     }
   }, [user, navigate]);
+
+  // Khi activeTab chuyển sang 'history', tự động gọi API (useEffect gọi lịch sử đặt vé)
+  useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        setIsLoadingHistory(true);
+        const response = await fetchClient("/bookings/my-history");
+        setHistoryData(response.data);
+      } catch (error) {
+        if (error instanceof Error) toast.error("Không thể tải lịch sử đặt vé");
+      } finally {
+        setIsLoadingHistory(false);
+      }
+    };
+
+    if (activeTab === "history") {
+      loadHistory();
+    }
+  }, [activeTab]);
 
   const handleUpdateProfile = (e: React.FormEvent) => {
     e.preventDefault();
@@ -314,16 +352,102 @@ const ProfilePage = () => {
               </>
             )}
 
-            {/* TAB 2: LỊCH SỬ ĐẶT VÉ (Giữ chỗ cho bài sau) */}
+            {/* TAB 2: LỊCH SỬ ĐẶT VÉ */}
             {activeTab === "history" && (
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-10 shadow-xl min-h-[400px] flex flex-col items-center justify-center">
-                <History className="w-20 h-20 text-slate-800 mb-6" />
-                <h2 className="text-2xl font-black text-slate-500 uppercase tracking-wider mb-2">
-                  Chưa có giao dịch
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-10 shadow-xl min-h-[400px]">
+                <h2 className="text-2xl font-black text-white uppercase tracking-wider mb-8 border-b-2 border-slate-800 pb-4 flex items-center gap-3">
+                  <History className="w-6 h-6 text-amber-500" /> Lịch sử đặt vé
                 </h2>
-                <p className="text-slate-600">
-                  Bạn chưa thực hiện giao dịch mua vé nào.
-                </p>
+
+                {isLoadingHistory ? (
+                  <div className="text-center text-amber-500 font-bold animate-pulse py-10">
+                    Đang tải dữ liệu...
+                  </div>
+                ) : historyData.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-10">
+                    <History className="w-20 h-20 text-slate-800 mb-6" />
+                    <h3 className="text-xl font-bold text-slate-500 uppercase">
+                      Chưa có giao dịch
+                    </h3>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-slate-700 text-slate-400 text-sm uppercase tracking-wider">
+                          <th className="pb-4 font-bold">Mã Đơn</th>
+                          <th className="pb-4 font-bold">Phim & Rạp</th>
+                          <th className="pb-4 font-bold">Ngày Đặt</th>
+                          <th className="pb-4 font-bold">Tổng Tiền</th>
+                          <th className="pb-4 font-bold">Trạng Thái</th>
+                        </tr>
+                      </thead>
+                      <tbody className="text-sm">
+                        {historyData.map((booking) => {
+                          const movieTitle =
+                            booking.ticketSeats[0]?.showtime.movie.title ||
+                            "N/A";
+                          const cinemaName =
+                            booking.ticketSeats[0]?.showtime.room.cinema.name ||
+                            "N/A";
+
+                          // Custom màu sắc theo trạng thái
+                          let statusClass =
+                            "bg-slate-800 text-slate-400 border-slate-700";
+                          let statusText = "Đang xử lý";
+                          if (booking.status === "SUCCESS") {
+                            statusClass =
+                              "bg-green-500/10 text-green-500 border-green-500/20";
+                            statusText = "Thành công";
+                          } else if (booking.status === "PENDING") {
+                            statusClass =
+                              "bg-amber-500/10 text-amber-500 border-amber-500/20";
+                            statusText = "Chờ thanh toán";
+                          } else if (booking.status === "FAILED") {
+                            statusClass =
+                              "bg-red-500/10 text-red-500 border-red-500/20";
+                            statusText = "Đã hủy";
+                          }
+
+                          return (
+                            <tr
+                              key={booking.id}
+                              className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors"
+                            >
+                              <td className="py-4 font-mono text-slate-300">
+                                {/* Cắt ngắn mã đơn hàng cho gọn */}
+                                {booking.id.substring(0, 8)}...
+                              </td>
+                              <td className="py-4">
+                                <p className="font-bold text-white mb-1">
+                                  {movieTitle}
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                  {cinemaName}
+                                </p>
+                              </td>
+                              <td className="py-4 text-slate-400">
+                                {new Date(booking.createdAt).toLocaleDateString(
+                                  "vi-VN",
+                                )}
+                              </td>
+                              <td className="py-4 font-black text-amber-500">
+                                {booking.totalPrice.toLocaleString("vi-VN")}đ
+                              </td>
+                              <td className="py-4">
+                                <span
+                                  className={`px-3 py-1 rounded-full text-xs font-bold border ${statusClass}`}
+                                >
+                                  {statusText}
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
           </div>

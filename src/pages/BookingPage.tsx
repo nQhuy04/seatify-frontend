@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { Minus, Plus, DoorOpen } from "lucide-react";
+import { Minus, Plus, DoorOpen, Loader2, Ticket } from "lucide-react";
 import { fetchClient } from "../utils/apiClient";
 import toast from "react-hot-toast";
 import GuestCheckoutModal from "../components/GuestCheckoutModal";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 const BookingPage = () => {
   const { showtimeId } = useParams();
@@ -20,6 +22,40 @@ const BookingPage = () => {
   // 2. STATE & API LẤY GHẾ ĐÃ BÁN (DATA THẬT)
   const [bookedSeats, setBookedSeats] = useState<string[]>([]);
   const [isLoadingSeats, setIsLoadingSeats] = useState(true);
+
+  // HÀM: ĐẶT VÉ TRỰC TIẾP CHO KHÁCH ĐÃ ĐĂNG NHẬP (BỎ QUA FORM GUEST)
+  const navigate = useNavigate();
+  const { user } = useAuth(); // Lấy thông tin khách đang đăng nhập
+  const [isHolding, setIsHolding] = useState(false); // Trạng thái nút bấm xoay vòng
+
+  //Hàm
+  const handleDirectBooking = async () => {
+    if (!user) return; // Đề phòng
+    try {
+      setIsHolding(true);
+      const response = await fetchClient("/bookings/hold", {
+        method: "POST",
+        body: JSON.stringify({
+          showtimeId: showtimeId,
+          seatNames: selectedSeats,
+          totalPrice: totalPrice,
+          userId: user.id, // Truyền ID khách xuống để Backend gắn vào hóa đơn
+          guestInfo: {
+            fullName: user.fullName,
+            email: user.email,
+            phone: user.phone || "000",
+          },
+        }),
+      });
+
+      toast.success("Giữ ghế thành công!");
+      navigate(`/checkout/${response.data.id}`); // Bay sang trang thanh toán
+    } catch (error) {
+      if (error instanceof Error) toast.error(error.message);
+    } finally {
+      setIsHolding(false);
+    }
+  };
 
   //3. THUẬT TOÁN TÍNH TIỀN ---
   // Hàm kiểm tra một ghế thuộc loại gì và trả về tiền phụ thu
@@ -537,13 +573,32 @@ const BookingPage = () => {
             </div>
 
             <button
+              // Vừa kiểm tra logic vé, vừa khóa nút lại (disabled) nếu đang trong trạng thái isHolding
               disabled={
-                totalTickets === 0 || selectedSeats.length !== totalTickets
+                totalTickets === 0 ||
+                selectedSeats.length !== totalTickets ||
+                isHolding
               }
-              onClick={() => setIsGuestModalOpen(true)}
-              className="px-8 py-3 rounded-xl font-black uppercase tracking-wider transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-amber-600 to-amber-500 text-white hover:from-amber-500 hover:to-amber-400 shadow-lg hover:shadow-amber-500/25 transform hover:-translate-y-1 disabled:transform-none disabled:shadow-none cursor-pointer"
+              onClick={() => {
+                if (user) {
+                  handleDirectBooking();
+                } else {
+                  setIsGuestModalOpen(true);
+                }
+              }}
+              // Thêm 'flex items-center gap-2' để chứa Icon cho đẹp
+              className="flex items-center gap-2 px-8 py-3 rounded-xl font-black uppercase tracking-wider transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-amber-600 to-amber-500 text-white hover:from-amber-500 hover:to-amber-400 shadow-lg hover:shadow-amber-500/25 transform hover:-translate-y-1 disabled:transform-none disabled:shadow-none cursor-pointer"
             >
-              Đặt Vé
+              {/* Hiển thị vòng xoay nếu isHolding = true, ngược lại hiện icon Vé */}
+              {isHolding ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" /> ĐANG XỬ LÝ...
+                </>
+              ) : (
+                <>
+                  <Ticket className="w-5 h-5" /> ĐẶT VÉ
+                </>
+              )}
             </button>
           </div>
         </div>

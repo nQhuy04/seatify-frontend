@@ -3,6 +3,7 @@ import MovieCard from "../components/MovieCard";
 import QuickBooking from "../components/QuickBooking";
 import { fetchClient } from "../utils/apiClient";
 import toast from "react-hot-toast";
+import { Link } from "react-router-dom";
 
 // 1. ĐỊNH NGHĨA KHUÔN DỮ LIỆU TỪ DATABASE
 // Dựa vào schema.prisma, khai báo để TypeScript hỗ trợ gợi ý code
@@ -46,9 +47,14 @@ const HomePage = () => {
     loadMovies();
   }, []); // <-- Cái mảng rỗng [] ở đây cực kỳ quan trọng, nó bảo React chỉ chạy 1 lần duy nhất!
 
-  // 4. BÓC TÁCH DỮ LIỆU (Filter)
-  const nowPlayingMovies = movies.filter((m) => m.status === "NOW_PLAYING");
-  const comingSoonMovies = movies.filter((m) => m.status === "COMING_SOON");
+  // 4. BÓC TÁCH DỮ LIỆU VÀ GIỚI HẠN 4 PHIM HIỂN THỊ LÊN TRANG CHỦ
+  const nowPlayingMovies = movies
+    .filter((m) => m.status === "NOW_PLAYING")
+    .slice(0, 4); // Chỉ lấy từ vị trí số 0 đến số 4
+
+  const comingSoonMovies = movies
+    .filter((m) => m.status === "COMING_SOON")
+    .slice(0, 4); // Chỉ lấy 4 phim
 
   // 5. HIỂN THỊ MÀN HÌNH LOADING (UX)
   if (isLoading) {
@@ -103,6 +109,15 @@ const HomePage = () => {
             ))}
           </div>
         )}
+
+        <div className="flex justify-center mt-12">
+          <Link
+            to="/movies-status/now-playing"
+            className="px-8 py-3 rounded-full font-bold border-2 border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-slate-900 transition-colors cursor-pointer"
+          >
+            Xem Thêm
+          </Link>
+        </div>
       </div>
 
       {/* KHU VỰC PHIM SẮP CHIẾU */}
@@ -134,9 +149,12 @@ const HomePage = () => {
         )}
 
         <div className="flex justify-center mt-12">
-          <button className="px-8 py-3 rounded-full font-bold border-2 border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-slate-900 transition-colors">
-            Xem Tất Cả Phim
-          </button>
+          <Link
+            to="/movies-status/coming-soon"
+            className="px-8 py-3 rounded-full font-bold border-2 border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-slate-900 transition-colors cursor-pointer"
+          >
+            Xem Thêm
+          </Link>
         </div>
       </div>
     </div>

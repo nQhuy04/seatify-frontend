@@ -8,6 +8,8 @@ import BookingPage from "./pages/BookingPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import { AuthProvider } from "./contexts/AuthContext";
 import ProfilePage from "./pages/ProfilePage";
+import SearchPage from "./pages/SearchPage";
+import MovieListPage from "./pages/MovieListPage";
 
 function App() {
   return (
@@ -21,6 +23,8 @@ function App() {
             <Route path="booking/:showtimeId" element={<BookingPage />} />
             <Route path="checkout/:bookingId" element={<CheckoutPage />} />
             <Route path="profile" element={<ProfilePage />} />
+            <Route path="search" element={<SearchPage />} />
+            <Route path="movies-status/:status" element={<MovieListPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>
