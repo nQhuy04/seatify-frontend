@@ -7,6 +7,7 @@ import {
   CalendarDays,
   Clock,
   Ticket,
+  AlertCircle,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { fetchClient } from "../utils/apiClient";
@@ -39,6 +40,22 @@ const CheckoutPage = () => {
   const [booking, setBooking] = useState<BookingData | null>(null);
   const [timeLeft, setTimeLeft] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+
+  // State quản lý Modal Hủy đơn
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+
+  // Hàm xử lý Hủy Đơn Hàng (Chạy khi bấm Đồng Ý trên Modal)
+  const executeCancelOrder = async () => {
+    try {
+      await fetchClient(`/bookings/${bookingId}/cancel`, { method: "POST" });
+      toast.success("Đã hủy giao dịch và trả ghế thành công!");
+      setIsCancelModalOpen(false); // Đóng modal
+      navigate("/"); // Đá văng về trang chủ
+    } catch (error) {
+      if (error instanceof Error) toast.error(error.message);
+      setIsCancelModalOpen(false);
+    }
+  };
 
   // 1. GỌI API LẤY DATA HÓA ĐƠN & TÍNH THỜI GIAN CÒN LẠI
   useEffect(() => {
@@ -280,14 +297,56 @@ const CheckoutPage = () => {
                   </span>
                 </div>
 
-                <button className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-600 to-amber-500 text-white font-bold uppercase tracking-wider py-4 rounded-xl hover:from-amber-500 hover:to-amber-400 transition-all transform hover:-translate-y-1 shadow-lg cursor-pointer">
+                <button className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-600 to-amber-500 text-white font-bold uppercase tracking-wider py-4 rounded-xl hover:from-amber-500 hover:to-amber-400 transition-all transform hover:-translate-y-1 shadow-lg hover:shadow-amber-500/25 cursor-pointer">
                   <Ticket className="w-5 h-5" /> THANH TOÁN
+                </button>
+
+                {/* --- NÚT HỦY ĐƠN HÀNG (MỚI THÊM) --- */}
+                <button
+                  onClick={() => setIsCancelModalOpen(true)}
+                  className="w-full mt-4 py-2 text-sm font-bold text-slate-500 hover:text-red-500 uppercase tracking-widest transition-colors cursor-pointer"
+                >
+                  Hủy giao dịch & Quay lại
                 </button>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* MODAL XÁC NHẬN HỦY GIAO DỊCH */}
+      {isCancelModalOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl w-full max-w-sm relative overflow-hidden transform transition-all p-8 text-center">
+            <div className="w-16 h-16 bg-red-500/10 border border-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <AlertCircle className="w-8 h-8 text-red-500" />
+            </div>
+
+            <h3 className="text-2xl font-black text-white uppercase tracking-wider mb-2">
+              Hủy Giao Dịch
+            </h3>
+            <p className="text-slate-400 mb-8 text-sm leading-relaxed">
+              Bạn có chắc chắn muốn hủy đơn hàng này?
+              <br /> Các ghế bạn đang chọn sẽ được trả lại cho hệ thống.
+            </p>
+
+            <div className="flex gap-4">
+              <button
+                onClick={() => setIsCancelModalOpen(false)}
+                className="flex-1 py-3 rounded-xl font-bold border border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer"
+              >
+                ĐÓNG
+              </button>
+              <button
+                onClick={executeCancelOrder} // Bấm nút này mới thực sự chọc API Hủy
+                className="flex-1 py-3 rounded-xl font-bold bg-red-500 text-white shadow-lg hover:bg-red-600 transform transition-transform hover:-translate-y-1 cursor-pointer"
+              >
+                HỦY ĐƠN
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -10,6 +10,9 @@ import { AuthProvider } from "./contexts/AuthContext";
 import ProfilePage from "./pages/ProfilePage";
 import SearchPage from "./pages/SearchPage";
 import MovieListPage from "./pages/MovieListPage";
+import AdminLayout from "./layouts/AdminLayout";
+import AdminDashboardPage from "./pages/AdminDashboardPage";
+import AdminRoute from "./components/AdminRoute";
 
 function App() {
   return (
@@ -26,6 +29,13 @@ function App() {
             <Route path="search" element={<SearchPage />} />
             <Route path="movies-status/:status" element={<MovieListPage />} />
             <Route path="*" element={<NotFoundPage />} />
+          </Route>
+
+          <Route element={<AdminRoute />}>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboardPage />} />
+              {/* Các trang quản lý phim, suất chiếu ta sẽ làm sau */}
+            </Route>
           </Route>
         </Routes>
       </BrowserRouter>
