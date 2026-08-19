@@ -1,5 +1,6 @@
 import { Play, Ticket, Clock, Globe, MessageCircle, Tags } from "lucide-react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 
 interface MovieCardProps {
   id: string | number;
@@ -10,6 +11,8 @@ interface MovieCardProps {
   duration?: number;
   country?: string;
   language?: string;
+  trailerUrl?: string;
+  onPlayTrailer?: (url: string) => void;
 }
 
 const MovieCard = ({
@@ -21,6 +24,8 @@ const MovieCard = ({
   duration = 120,
   country = "Mỹ",
   language = "Phụ đề Tiếng Việt",
+  trailerUrl,
+  onPlayTrailer,
 }: MovieCardProps) => {
   return (
     <Link to={`movies/${id}`} className="flex flex-col gap-4 group">
@@ -74,7 +79,14 @@ const MovieCard = ({
 
         {/* 2 Nút bấm */}
         <div className="flex items-center justify-between gap-2">
-          <button className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-semibold text-sm text-slate-300 border border-slate-700 hover:bg-slate-800 hover:text-white transition-colors">
+          <button
+            onClick={(e) => {
+              e.preventDefault(); // CHẶN LỆNH CHUYỂN TRANG CỦA THẺ LINK!
+              if (onPlayTrailer && trailerUrl) onPlayTrailer(trailerUrl);
+              else toast.error("Trailer đang được cập nhật!");
+            }}
+            className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-semibold text-sm text-slate-300 border border-slate-700 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer"
+          >
             <Play className="w-4 h-4" /> Trailer
           </button>
 

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { Minus, Plus, DoorOpen, Loader2, Ticket } from "lucide-react";
 import { fetchClient } from "../utils/apiClient";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 import GuestCheckoutModal from "../components/GuestCheckoutModal";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";

@@ -10,7 +10,7 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 import { useAuth } from "../contexts/AuthContext";
 
 interface AuthModalProps {

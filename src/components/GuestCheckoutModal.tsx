@@ -2,7 +2,7 @@ import { useState } from "react";
 import { X, Mail, User, Phone, Ticket, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { fetchClient } from "../utils/apiClient";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 // 1. Thêm thuộc tính showtimeId vào khuôn Props
 interface GuestCheckoutModalProps {

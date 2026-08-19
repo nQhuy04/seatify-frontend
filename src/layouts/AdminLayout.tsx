@@ -8,7 +8,7 @@ import {
   Clapperboard,
   StepBackIcon,
 } from "lucide-react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 const AdminLayout = () => {
   const { user, logout } = useAuth();

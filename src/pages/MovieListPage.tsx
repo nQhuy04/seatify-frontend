@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { fetchClient } from "../utils/apiClient";
 import MovieCard from "../components/MovieCard";
 import { Loader2, Film } from "lucide-react";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 interface Movie {
   id: string;

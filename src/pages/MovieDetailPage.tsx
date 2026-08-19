@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { fetchClient } from "../utils/apiClient";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 import { Link, useParams } from "react-router-dom";
 import {
   Play,
@@ -11,6 +11,7 @@ import {
   UserCheck,
   MapPin,
 } from "lucide-react";
+import TrailerModal from "../components/TrailerModal";
 
 // --- INTERFACE (Khuôn dữ liệu chi tiết phim) ---
 interface MovieDetailData {
@@ -18,6 +19,7 @@ interface MovieDetailData {
   title: string;
   description: string | null;
   posterUrl: string | null;
+  trailerUrl: string | null;
   filmGenres: string | null;
   duration: number;
   ageRating: string;
@@ -60,14 +62,38 @@ interface CinemaGroup {
   rooms: RoomGroup[];
 }
 
-// --- MOCK DATA NGÀY CHIẾU ---
-// Value: Dùng để gọi API (Chuẩn YYYY-MM-DD)
-// Display: Dùng để hiển thị cho khách xem
-const MOCK_DATES = [
-  { display: "29/07", dayOfWeek: "Thứ Tư", value: "2026-07-29" },
-  { display: "30/07", dayOfWeek: "Thứ Năm", value: "2026-07-30" }, // Ngày chúng ta có Data thật
-  { display: "31/07", dayOfWeek: "Thứ Sáu", value: "2026-07-31" },
-];
+// --- TẠO DANH SÁCH NGÀY ĐỘNG (5 NGÀY TỚI) ---
+const generateUpcomingDates = () => {
+  const dates = [];
+  const today = new Date();
+  const dayNames = [
+    "Chủ Nhật",
+    "Thứ Hai",
+    "Thứ Ba",
+    "Thứ Tư",
+    "Thứ Năm",
+    "Thứ Sáu",
+    "Thứ Bảy",
+  ];
+
+  for (let i = 0; i < 5; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+
+    const day = d.getDate().toString().padStart(2, "0");
+    const month = (d.getMonth() + 1).toString().padStart(2, "0");
+    const year = d.getFullYear();
+
+    dates.push({
+      display: `${day}/${month}`,
+      dayOfWeek: i === 0 ? "Hôm nay" : dayNames[d.getDay()],
+      value: `${year}-${month}-${day}`, // Chuẩn YYYY-MM-DD để gửi API
+    });
+  }
+  return dates;
+};
+
+const DYNAMIC_DATES = generateUpcomingDates();
 
 const MovieDetailPage = () => {
   const { movieId } = useParams();
@@ -78,9 +104,12 @@ const MovieDetailPage = () => {
 
   // 2. STATE QUẢN LÝ LỊCH CHIẾU
   // Mặc định chọn ngày 30/07 để có data
-  const [selectedDate, setSelectedDate] = useState("2026-07-30");
+  const [selectedDate, setSelectedDate] = useState(DYNAMIC_DATES[0].value);
   const [showtimesData, setShowtimesData] = useState<CinemaGroup[]>([]);
   const [isLoadingShowtimes, setIsLoadingShowtimes] = useState(false);
+
+  // State quản lý Trailer Modal
+  const [isTrailerOpen, setIsTrailerOpen] = useState(false);
 
   // --- EFFECT 1: LẤY CHI TIẾT PHIM ---
   useEffect(() => {
@@ -281,7 +310,10 @@ const MovieDetailPage = () => {
               </div>
 
               <div>
-                <button className="flex items-center gap-2 px-8 py-3.5 rounded-full font-bold transition-all transform hover:scale-105 border-2 border-slate-600 text-white hover:bg-slate-800 hover:border-slate-500 shadow-lg cursor-pointer">
+                <button
+                  onClick={() => setIsTrailerOpen(true)}
+                  className="flex items-center gap-2 px-8 py-3.5 rounded-full font-bold transition-all transform hover:scale-105 border-2 border-slate-600 text-white hover:bg-slate-800 hover:border-slate-500 shadow-lg cursor-pointer"
+                >
                   <Play className="w-5 h-5" /> Xem Trailer
                 </button>
               </div>
@@ -302,7 +334,7 @@ const MovieDetailPage = () => {
         <div className="max-w-5xl mx-auto">
           {/* TABS CHỌN NGÀY */}
           <div className="flex flex-wrap justify-center gap-3 mb-12">
-            {MOCK_DATES.map((dateObj, index) => (
+            {DYNAMIC_DATES.map((dateObj, index) => (
               <button
                 key={index}
                 onClick={() => setSelectedDate(dateObj.value)}
@@ -378,6 +410,12 @@ const MovieDetailPage = () => {
           </div>
         </div>
       </div>
+      {/* Gọi Modal Trailer ra đây */}
+      <TrailerModal
+        isOpen={isTrailerOpen}
+        onClose={() => setIsTrailerOpen(false)}
+        videoUrl={movie.trailerUrl}
+      />
     </div>
   );
 };

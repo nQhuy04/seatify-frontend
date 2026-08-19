@@ -1,6 +1,6 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 const AdminRoute = () => {
   const { user } = useAuth();

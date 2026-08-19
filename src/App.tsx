@@ -10,13 +10,17 @@ import { AuthProvider } from "./contexts/AuthContext";
 import ProfilePage from "./pages/ProfilePage";
 import SearchPage from "./pages/SearchPage";
 import MovieListPage from "./pages/MovieListPage";
+import AdminShowtimePage from "./pages/Admin/AdminShowtimePage";
 import AdminLayout from "./layouts/AdminLayout";
-import AdminDashboardPage from "./pages/AdminDashboardPage";
+import AdminDashboardPage from "./pages/Admin/AdminDashboardPage";
+import AdminMoviesPage from "./pages/Admin/AdminMoviePage";
 import AdminRoute from "./components/AdminRoute";
+import { Toaster } from "sonner";
 
 function App() {
   return (
     <AuthProvider>
+      <Toaster richColors position="top-right" duration={3000} />
       <BrowserRouter>
         <ScrollToTop />
         <Routes>
@@ -34,7 +38,8 @@ function App() {
           <Route element={<AdminRoute />}>
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminDashboardPage />} />
-              {/* Các trang quản lý phim, suất chiếu ta sẽ làm sau */}
+              <Route path="showtimes" element={<AdminShowtimePage />} />
+              <Route path="movies" element={<AdminMoviesPage />} />
             </Route>
           </Route>
         </Routes>

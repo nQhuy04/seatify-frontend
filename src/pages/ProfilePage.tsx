@@ -11,7 +11,7 @@ import {
   Save,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 import { fetchClient } from "../utils/apiClient";
 
 // Khuôn dữ liệu cho Lịch sử hóa đơn

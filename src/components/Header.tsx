@@ -10,7 +10,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import AuthModal from "./AuthModal";
 import { useAuth } from "../contexts/AuthContext";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 
 const Header = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);

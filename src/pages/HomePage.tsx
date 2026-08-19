@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import MovieCard from "../components/MovieCard";
 import QuickBooking from "../components/QuickBooking";
+import TrailerModal from "../components/TrailerModal";
 import { fetchClient } from "../utils/apiClient";
-import toast from "react-hot-toast";
+import { toast } from "sonner";
 import { Link } from "react-router-dom";
 
 // 1. ĐỊNH NGHĨA KHUÔN DỮ LIỆU TỪ DATABASE
@@ -12,6 +13,7 @@ interface Movie {
   title: string;
   filmGenres: string | null;
   posterUrl: string | null;
+  trailerUrl: string | null;
   ageRating: string;
   status: "NOW_PLAYING" | "COMING_SOON" | "ARCHIVED";
   duration: number;
@@ -21,6 +23,18 @@ const HomePage = () => {
   // 2. KHỞI TẠO CÁC CÁI RỔ (STATE)
   const [movies, setMovies] = useState<Movie[]>([]);
   const [isLoading, setIsLoading] = useState(true); // Trạng thái đang tải (Loading)
+
+  // State quản lý Trailer
+  const [isTrailerOpen, setIsTrailerOpen] = useState(false);
+  const [currentTrailerUrl, setCurrentTrailerUrl] = useState<string | null>(
+    null,
+  );
+
+  // Hàm hứng link trailer từ MovieCard bắn lên
+  const handlePlayTrailer = (url: string) => {
+    setCurrentTrailerUrl(url);
+    setIsTrailerOpen(true);
+  };
 
   // 3. GỌI API ĐÚNG 1 LẦN KHI MỞ TRANG (useEffect)
   useEffect(() => {
@@ -101,10 +115,12 @@ const HomePage = () => {
                 key={movie.id}
                 id={movie.id}
                 title={movie.title}
-                genre={movie.filmGenres || "Đang cập nhật"} // Database dùng filmGenres
+                genre={movie.filmGenres || "Đang cập nhật"}
                 posterUrl={movie.posterUrl || ""}
                 ageRating={movie.ageRating}
                 duration={movie.duration}
+                trailerUrl={movie.trailerUrl || undefined}
+                onPlayTrailer={handlePlayTrailer}
               />
             ))}
           </div>
@@ -143,6 +159,8 @@ const HomePage = () => {
                 posterUrl={movie.posterUrl || ""}
                 ageRating={movie.ageRating}
                 duration={movie.duration}
+                trailerUrl={movie.trailerUrl || undefined}
+                onPlayTrailer={handlePlayTrailer}
               />
             ))}
           </div>
@@ -157,6 +175,12 @@ const HomePage = () => {
           </Link>
         </div>
       </div>
+      {/* GỌI MODAL TRAILER CỦA TRANG CHỦ */}
+      <TrailerModal
+        isOpen={isTrailerOpen}
+        onClose={() => setIsTrailerOpen(false)}
+        videoUrl={currentTrailerUrl}
+      />
     </div>
   );
 };
