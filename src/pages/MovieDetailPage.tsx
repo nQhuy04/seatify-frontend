@@ -62,6 +62,18 @@ interface CinemaGroup {
   rooms: RoomGroup[];
 }
 
+const getAgeDescription = (rating: string) => {
+  if (rating === "P")
+    return "Phim được phép phổ biến đến người xem ở mọi độ tuổi.";
+  if (rating === "T13")
+    return "Phim dành cho khán giả từ đủ 13 tuổi trở lên (13+).";
+  if (rating === "T16")
+    return "Phim dành cho khán giả từ đủ 16 tuổi trở lên (16+).";
+  if (rating === "T18")
+    return "Phim dành cho khán giả từ đủ 18 tuổi trở lên (18+).";
+  return "Chưa phân loại";
+};
+
 // --- TẠO DANH SÁCH NGÀY ĐỘNG (5 NGÀY TỚI) ---
 const generateUpcomingDates = () => {
   const dates = [];
@@ -267,8 +279,7 @@ const MovieDetailPage = () => {
                 <div className="flex items-start gap-3 text-slate-300 sm:col-span-2 bg-amber-500/10 p-3 rounded-lg border border-amber-500/20 mt-2">
                   <UserCheck className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
                   <span className="text-sm text-amber-400 font-medium leading-relaxed">
-                    Phân loại độ tuổi: Phim dành cho khán giả từ{" "}
-                    {movie.ageRating.replace("C", "")} tuổi trở lên.
+                    Phân loại: {getAgeDescription(movie.ageRating)}
                   </span>
                 </div>
               </div>

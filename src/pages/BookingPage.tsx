@@ -7,6 +7,18 @@ import GuestCheckoutModal from "../components/GuestCheckoutModal";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
+// Định nghĩa khuôn thông tin Suất chiếu
+interface ShowtimeInfo {
+  movie: {
+    title: string;
+    ageRating: string;
+  };
+  room: {
+    name: string;
+    cinema: { name: string; location: string };
+  };
+}
+
 const BookingPage = () => {
   const { showtimeId } = useParams();
 
@@ -22,6 +34,8 @@ const BookingPage = () => {
   // 2. STATE & API LẤY GHẾ ĐÃ BÁN (DATA THẬT)
   const [bookedSeats, setBookedSeats] = useState<string[]>([]);
   const [isLoadingSeats, setIsLoadingSeats] = useState(true);
+
+  const [showtimeInfo, setShowtimeInfo] = useState<ShowtimeInfo | null>(null); // State chứa thông tin phim, rạp
 
   // HÀM: ĐẶT VÉ TRỰC TIẾP CHO KHÁCH ĐÃ ĐĂNG NHẬP (BỎ QUA FORM GUEST)
   const navigate = useNavigate();
@@ -80,12 +94,17 @@ const BookingPage = () => {
   const totalPrice = baseTicketPrice + totalSurcharge;
 
   useEffect(() => {
-    const fetchBookedSeats = async () => {
+    const fetchShowtimeData = async () => {
       try {
         setIsLoadingSeats(true);
-        // Gọi API thật lấy danh sách ghế bị khóa
-        const response = await fetchClient(`/showtimes/${showtimeId}/seats`);
-        setBookedSeats(response.data); // Data là mảng ['A1', 'B2']
+        // Gọi 2 API CÙNG LÚC
+        const [seatsRes, infoRes] = await Promise.all([
+          fetchClient(`/showtimes/${showtimeId}/seats`),
+          fetchClient(`/showtimes/${showtimeId}`),
+        ]);
+
+        setBookedSeats(seatsRes.data);
+        setShowtimeInfo(infoRes.data);
       } catch (error) {
         if (error instanceof Error) toast.error(error.message);
       } finally {
@@ -93,7 +112,7 @@ const BookingPage = () => {
       }
     };
 
-    if (showtimeId) fetchBookedSeats();
+    if (showtimeId) fetchShowtimeData();
   }, [showtimeId]);
 
   // 3. LOGIC TĂNG GIẢM VÉ
@@ -531,12 +550,17 @@ const BookingPage = () => {
       {/* --- KHU VỰC 3: THANH THANH TOÁN DÍNH ĐÁY --- */}
       <div className="fixed bottom-0 left-0 w-full bg-slate-900 border-t border-slate-800 shadow-[0_-10px_30px_rgba(0,0,0,0.5)] z-50">
         <div className="container mx-auto max-w-6xl px-4 h-24 flex items-center justify-between gap-4">
+          {/* Thông tin Phim & Rạp (Bên trái) */}
           <div className="hidden md:flex flex-col">
             <h3 className="text-white font-black uppercase tracking-wider text-lg">
-              DEADPOOL & WOLVERINE (T18)
+              {showtimeInfo
+                ? `${showtimeInfo.movie.title} (${showtimeInfo.movie.ageRating})`
+                : "Đang tải..."}
             </h3>
             <p className="text-slate-400 text-sm font-medium">
-              Seatify Quốc Thanh (TP.HCM) - Phòng 1
+              {showtimeInfo
+                ? `${showtimeInfo.room.cinema.name} - ${showtimeInfo.room.name}`
+                : "Đang tải..."}
             </p>
           </div>
 

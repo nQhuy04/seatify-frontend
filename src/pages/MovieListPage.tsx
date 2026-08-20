@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { fetchClient } from "../utils/apiClient";
 import MovieCard from "../components/MovieCard";
+import TrailerModal from "../components/TrailerModal";
 import { Loader2, Film } from "lucide-react";
 import { toast } from "sonner";
 
@@ -10,6 +11,7 @@ interface Movie {
   title: string;
   filmGenres: string | null;
   posterUrl: string | null;
+  trailerUrl: string | null;
   ageRating: string;
   status: "NOW_PLAYING" | "COMING_SOON" | "ARCHIVED";
   duration: number;
@@ -26,6 +28,18 @@ const MovieListPage = () => {
   const isNowPlaying = status === "now-playing";
   const pageTitle = isNowPlaying ? "PHIM ĐANG CHIẾU" : "PHIM SẮP CHIẾU";
   const dbStatus = isNowPlaying ? "NOW_PLAYING" : "COMING_SOON";
+
+  // State quản lý Trailer
+  const [isTrailerOpen, setIsTrailerOpen] = useState(false);
+  const [currentTrailerUrl, setCurrentTrailerUrl] = useState<string | null>(
+    null,
+  );
+
+  // Hàm hứng link trailer từ MovieCard bắn lên
+  const handlePlayTrailer = (url: string) => {
+    setCurrentTrailerUrl(url);
+    setIsTrailerOpen(true);
+  };
 
   // 2. GỌI API & LỌC DỮ LIỆU
   useEffect(() => {
@@ -81,6 +95,8 @@ const MovieListPage = () => {
                 title={movie.title}
                 genre={movie.filmGenres || "Đang cập nhật"}
                 posterUrl={movie.posterUrl || ""}
+                trailerUrl={movie.trailerUrl || undefined}
+                onPlayTrailer={handlePlayTrailer}
                 ageRating={movie.ageRating}
                 duration={movie.duration}
               />
@@ -88,6 +104,13 @@ const MovieListPage = () => {
           </div>
         )}
       </div>
+
+      {/*MODAL TRAILER*/}
+      <TrailerModal
+        isOpen={isTrailerOpen}
+        onClose={() => setIsTrailerOpen(false)}
+        videoUrl={currentTrailerUrl}
+      />
     </div>
   );
 };

@@ -19,7 +19,16 @@ export const fetchClient = async (
     headers,
   });
 
+  //XỬ LÝ LỖI (Bắt lỗi 401 Hết hạn Token)
   if (!response.ok) {
+    // Nếu Backend báo 401 (Vé giả hoặc Hết hạn)
+    if (response.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      // Đá thẳng về trang chủ và ép reload để xóa sạch State
+      window.location.href = "/";
+    }
+
     const errorData = await response.json();
     throw new Error(errorData.message || "Có lỗi xảy ra từ máy chủ!");
   }

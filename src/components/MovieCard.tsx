@@ -28,7 +28,7 @@ const MovieCard = ({
   onPlayTrailer,
 }: MovieCardProps) => {
   return (
-    <Link to={`movies/${id}`} className="flex flex-col gap-4 group">
+    <Link to={`/movies/${id}`} className="flex flex-col gap-4 group">
       {/* 1. KHU VỰC POSTER */}
       <div className="relative rounded-2xl overflow-hidden cursor-pointer bg-slate-800 aspect-[2/3] w-full shadow-lg">
         {/* Ảnh Poster */}

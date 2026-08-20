@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { fetchClient } from "../utils/apiClient";
 import MovieCard from "../components/MovieCard";
+import TrailerModal from "../components/TrailerModal";
 import { SearchX, Loader2 } from "lucide-react";
 
 // Định nghĩa khuôn cho bộ phim lấy từ API về
@@ -10,6 +11,7 @@ interface Movie {
   title: string;
   filmGenres: string | null;
   posterUrl: string | null;
+  trailerUrl: string | null;
   ageRating: string;
   duration: number;
 }
@@ -21,6 +23,18 @@ const SearchPage = () => {
 
   const [movies, setMovies] = useState<Movie[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // State quản lý Trailer
+  const [isTrailerOpen, setIsTrailerOpen] = useState(false);
+  const [currentTrailerUrl, setCurrentTrailerUrl] = useState<string | null>(
+    null,
+  );
+
+  // Hàm hứng link trailer từ MovieCard bắn lên
+  const handlePlayTrailer = (url: string) => {
+    setCurrentTrailerUrl(url);
+    setIsTrailerOpen(true);
+  };
 
   useEffect(() => {
     const fetchAndFilterMovies = async () => {
@@ -89,6 +103,8 @@ const SearchPage = () => {
                 title={movie.title}
                 genre={movie.filmGenres || "Đang cập nhật"}
                 posterUrl={movie.posterUrl || ""}
+                trailerUrl={movie.trailerUrl || undefined}
+                onPlayTrailer={handlePlayTrailer}
                 ageRating={movie.ageRating}
                 duration={movie.duration}
               />
@@ -96,6 +112,13 @@ const SearchPage = () => {
           </div>
         )}
       </div>
+
+      {/* MODAL TRAILER*/}
+      <TrailerModal
+        isOpen={isTrailerOpen}
+        onClose={() => setIsTrailerOpen(false)}
+        videoUrl={currentTrailerUrl}
+      />
     </div>
   );
 };

@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
-import { Film, Plus, X, Loader2 } from "lucide-react";
+import { Film, Plus, X, Loader2, Edit } from "lucide-react"; // Thêm icon Edit
 import { fetchClient } from "../../utils/apiClient";
 import { toast } from "sonner";
 
-// --- THÊM KHUÔN NÀY ĐỂ XÓA LỖI ANY ---
 interface Movie {
   id: string;
   title: string;
@@ -11,6 +10,15 @@ interface Movie {
   duration: number;
   ageRating: string;
   status: string;
+  trailerUrl?: string;
+  filmGenres?: string;
+  director?: string;
+  cast?: string;
+  country?: string;
+  language?: string;
+  releaseDate?: string;
+  endDate?: string;
+  description?: string;
 }
 
 const AdminMoviesPage = () => {
@@ -18,46 +26,88 @@ const AdminMoviesPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // State: Chìa khóa làm mới dữ liệu
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Khởi tạo state cho Form
+  // LOGIC SỬA PHIM: Dùng để phân biệt form đang Thêm hay Sửa
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  // Đã bổ sung trường endDate vào Form
   const [formData, setFormData] = useState({
     title: "",
     posterUrl: "",
     trailerUrl: "",
     duration: "",
-    ageRating: "C13",
+    ageRating: "T18", // Default T18
     status: "COMING_SOON",
     filmGenres: "",
     director: "",
     cast: "",
     country: "Việt Nam",
-    language: "Tiếng Việt",
+    language: "Phụ đề Tiếng Việt",
     releaseDate: "",
+    endDate: "",
     description: "",
   });
 
-  // Gọi API lấy danh sách phim
-  // THUẬT TOÁN LOAD DATA CHUẨN REACT 19
   useEffect(() => {
     const fetchMovies = async () => {
       try {
-        // Bỏ dòng setIsLoading(true) đồng bộ đi để tránh lỗi Cascading Renders
         const res = await fetchClient("/movies");
         setMovies(res.data);
       } catch {
         toast.error("Lỗi khi tải danh sách phim!");
       } finally {
-        setIsLoading(false); // Dữ liệu tải xong mới set thành false
+        setIsLoading(false);
       }
     };
-
     fetchMovies();
-  }, [refreshKey]); // Hễ biến refreshKey thay đổi số, useEffect sẽ tự động chạy lại!
+  }, [refreshKey]);
 
-  // Xử lý Thêm Phim
+  // HÀM: Bấm nút Thêm Mới
+  const handleAddNew = () => {
+    setEditingId(null); // Không có ID => Là Thêm mới
+    setFormData({
+      title: "",
+      posterUrl: "",
+      trailerUrl: "",
+      duration: "",
+      ageRating: "T18",
+      status: "COMING_SOON",
+      filmGenres: "",
+      director: "",
+      cast: "",
+      country: "Việt Nam",
+      language: "Phụ đề Tiếng Việt",
+      releaseDate: "",
+      endDate: "",
+      description: "",
+    });
+    setIsModalOpen(true);
+  };
+
+  // HÀM: Bấm nút Sửa phim (Fill data vào form)
+  const handleEdit = (movie: Movie) => {
+    setEditingId(movie.id); // Có ID => Là Sửa
+    setFormData({
+      title: movie.title,
+      posterUrl: movie.posterUrl || "",
+      trailerUrl: movie.trailerUrl || "",
+      duration: movie.duration.toString(),
+      ageRating: movie.ageRating,
+      status: movie.status,
+      filmGenres: movie.filmGenres || "",
+      director: movie.director || "",
+      cast: movie.cast || "",
+      country: movie.country || "",
+      language: movie.language || "",
+      // Xử lý cắt chuỗi ngày tháng để gắn vào thẻ <input type="date">
+      releaseDate: movie.releaseDate ? movie.releaseDate.split("T")[0] : "",
+      endDate: movie.endDate ? movie.endDate.split("T")[0] : "",
+      description: movie.description || "",
+    });
+    setIsModalOpen(true);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title || !formData.duration || !formData.posterUrl) {
@@ -66,32 +116,24 @@ const AdminMoviesPage = () => {
 
     try {
       setIsSubmitting(true);
-      await fetchClient("/movies", {
-        method: "POST",
-        body: JSON.stringify(formData),
-      });
 
-      toast.success("Đã thêm phim mới thành công!");
-      setIsModalOpen(false); // Đóng modal
-      setFormData({
-        title: "",
-        posterUrl: "",
-        trailerUrl: "",
-        duration: "",
-        ageRating: "C13",
-        status: "COMING_SOON",
-        filmGenres: "",
-        director: "",
-        cast: "",
-        country: "Việt Nam",
-        language: "Tiếng Việt",
-        releaseDate: "",
-        description: "",
-      });
+      // KIỂM TRA: Nếu có editingId thì gọi PUT, nếu không thì gọi POST
+      if (editingId) {
+        await fetchClient(`/movies/${editingId}`, {
+          method: "PUT",
+          body: JSON.stringify(formData),
+        });
+        toast.success("Đã cập nhật thông tin phim thành công!");
+      } else {
+        await fetchClient("/movies", {
+          method: "POST",
+          body: JSON.stringify(formData),
+        });
+        toast.success("Đã thêm phim mới thành công!");
+      }
 
-      // Thay vì gọi hàm, ta cộng biến refreshKey lên 1.
-      // useEffect ở trên thấy biến đổi sẽ tự động chạy lại kéo phim mới về!
-      setRefreshKey((prev) => prev + 1); // Gọi lại API để làm mới cái bảng
+      setIsModalOpen(false);
+      setRefreshKey((prev) => prev + 1); // Load lại bảng
     } catch (error) {
       if (error instanceof Error) toast.error(error.message);
     } finally {
@@ -101,7 +143,6 @@ const AdminMoviesPage = () => {
 
   return (
     <div className="p-8">
-      {/* HEADER CỦA TRANG QUẢN LÝ */}
       <div className="flex items-center justify-between mb-8 border-b-2 border-slate-800 pb-4">
         <div className="flex items-center gap-3">
           <Film className="w-8 h-8 text-amber-500" />
@@ -110,7 +151,7 @@ const AdminMoviesPage = () => {
           </h1>
         </div>
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={handleAddNew} // Gọi hàm thêm mới
           className="flex items-center gap-2 bg-amber-500 text-slate-950 font-bold px-6 py-2.5 rounded-xl hover:bg-amber-400 transition-colors shadow-lg shadow-amber-500/20 cursor-pointer"
         >
           <Plus className="w-5 h-5" /> Thêm Phim Mới
@@ -132,6 +173,7 @@ const AdminMoviesPage = () => {
                   <th className="p-4 font-bold">Thời Lượng</th>
                   <th className="p-4 font-bold">Phân Loại</th>
                   <th className="p-4 font-bold">Trạng Thái</th>
+                  <th className="p-4 font-bold text-center">Thao Tác</th>
                 </tr>
               </thead>
               <tbody className="text-sm text-slate-300">
@@ -169,6 +211,15 @@ const AdminMoviesPage = () => {
                         <span className="text-slate-500 font-bold">Đã gỡ</span>
                       )}
                     </td>
+                    <td className="p-4 text-center">
+                      <button
+                        onClick={() => handleEdit(m)} // NÚT SỬA PHIM
+                        className="p-2 bg-slate-800 text-slate-300 hover:bg-amber-500 hover:text-slate-950 rounded-lg transition-colors cursor-pointer"
+                        title="Sửa phim"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -177,15 +228,14 @@ const AdminMoviesPage = () => {
         )}
       </div>
 
-      {/* ========================================== */}
-      {/* MODAL THÊM PHIM MỚI */}
-      {/* ========================================== */}
+      {/* MODAL THÊM / SỬA PHIM */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
           <div className="bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl w-full max-w-4xl relative overflow-hidden transform transition-all flex flex-col max-h-[90vh]">
-            <div className="flex justify-between items-center p-6 border-b border-slate-800">
-              <h2 className="text-2xl font-black text-white uppercase tracking-wider">
-                Thêm Phim Mới
+            <div className="flex justify-between items-center p-6 border-b border-slate-800 bg-slate-950/50">
+              {/* Đổi tiêu đề dựa theo trạng thái Thêm hay Sửa */}
+              <h2 className="text-2xl font-black text-amber-500 uppercase tracking-wider">
+                {editingId ? "Cập Nhật Phim" : "Thêm Phim Mới"}
               </h2>
               <button
                 onClick={() => setIsModalOpen(false)}
@@ -195,14 +245,12 @@ const AdminMoviesPage = () => {
               </button>
             </div>
 
-            {/* Vùng cuộn của Form */}
             <div className="p-6 overflow-y-auto custom-scrollbar">
               <form
                 id="movieForm"
                 onSubmit={handleSubmit}
                 className="space-y-6"
               >
-                {/* Dòng 1 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-sm font-bold text-slate-400">
@@ -234,7 +282,35 @@ const AdminMoviesPage = () => {
                   </div>
                 </div>
 
-                {/* Dòng 2 */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-400">
+                      Đạo diễn
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.director}
+                      onChange={(e) =>
+                        setFormData({ ...formData, director: e.target.value })
+                      }
+                      className="w-full bg-slate-950 border border-slate-700 text-white rounded-xl px-4 py-3 focus:border-amber-500 outline-none"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-400">
+                      Diễn viên chính
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.cast}
+                      onChange={(e) =>
+                        setFormData({ ...formData, cast: e.target.value })
+                      }
+                      className="w-full bg-slate-950 border border-slate-700 text-white rounded-xl px-4 py-3 focus:border-amber-500 outline-none"
+                    />
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="text-sm font-bold text-slate-400">
@@ -267,23 +343,66 @@ const AdminMoviesPage = () => {
                   </div>
                 </div>
 
-                {/* Dòng 3 */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-400">
+                      Thể loại phim
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="VD: Hành động, Hài..."
+                      value={formData.filmGenres}
+                      onChange={(e) =>
+                        setFormData({ ...formData, filmGenres: e.target.value })
+                      }
+                      className="w-full bg-slate-950 border border-slate-700 text-white rounded-xl px-4 py-3 focus:border-amber-500 outline-none"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-400">
+                      Quốc gia
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.country}
+                      onChange={(e) =>
+                        setFormData({ ...formData, country: e.target.value })
+                      }
+                      className="w-full bg-slate-950 border border-slate-700 text-white rounded-xl px-4 py-3 focus:border-amber-500 outline-none"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-slate-400">
+                      Ngôn ngữ
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.language}
+                      onChange={(e) =>
+                        setFormData({ ...formData, language: e.target.value })
+                      }
+                      className="w-full bg-slate-950 border border-slate-700 text-white rounded-xl px-4 py-3 focus:border-amber-500 outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                   <div className="space-y-2">
                     <label className="text-sm font-bold text-slate-400">
                       Phân loại tuổi
                     </label>
+                    {/* CẬP NHẬT CHUẨN TUỔI MỚI (P, T13, T16, T18) */}
                     <select
                       value={formData.ageRating}
                       onChange={(e) =>
                         setFormData({ ...formData, ageRating: e.target.value })
                       }
-                      className="w-full bg-slate-950 border border-slate-700 text-white rounded-xl px-4 py-3 focus:border-amber-500 outline-none"
+                      className="w-full bg-slate-950 border border-slate-700 text-white rounded-xl px-4 py-3 focus:border-amber-500 outline-none cursor-pointer"
                     >
-                      <option value="K">K (Mọi lứa tuổi)</option>
-                      <option value="C13">C13</option>
-                      <option value="C16">C16</option>
-                      <option value="C18">C18</option>
+                      <option value="P">P (Mọi lứa tuổi)</option>
+                      <option value="T13">T13 (13+)</option>
+                      <option value="T16">T16 (16+)</option>
+                      <option value="T18">T18 (18+)</option>
                     </select>
                   </div>
                   <div className="space-y-2">
@@ -295,7 +414,7 @@ const AdminMoviesPage = () => {
                       onChange={(e) =>
                         setFormData({ ...formData, status: e.target.value })
                       }
-                      className="w-full bg-slate-950 border border-slate-700 text-white rounded-xl px-4 py-3 focus:border-amber-500 outline-none"
+                      className="w-full bg-slate-950 border border-slate-700 text-white rounded-xl px-4 py-3 focus:border-amber-500 outline-none cursor-pointer"
                     >
                       <option value="NOW_PLAYING">Đang chiếu</option>
                       <option value="COMING_SOON">Sắp chiếu</option>
@@ -315,12 +434,24 @@ const AdminMoviesPage = () => {
                           releaseDate: e.target.value,
                         })
                       }
-                      className="w-full bg-slate-950 border border-slate-700 text-white rounded-xl px-4 py-3 focus:border-amber-500 outline-none"
+                      className="w-full bg-slate-950 border border-slate-700 text-white rounded-xl px-4 py-3 focus:border-amber-500 outline-none cursor-pointer"
+                    />
+                  </div>
+                  <div className="space-y-2" style={{ colorScheme: "dark" }}>
+                    <label className="text-sm font-bold text-slate-400">
+                      Ngày kết thúc
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.endDate}
+                      onChange={(e) =>
+                        setFormData({ ...formData, endDate: e.target.value })
+                      }
+                      className="w-full bg-slate-950 border border-slate-700 text-white rounded-xl px-4 py-3 focus:border-amber-500 outline-none cursor-pointer"
                     />
                   </div>
                 </div>
 
-                {/* Dòng 4 */}
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-slate-400">
                     Mô tả Nội dung phim
@@ -337,12 +468,11 @@ const AdminMoviesPage = () => {
               </form>
             </div>
 
-            {/* NÚT SUBMIT NẰM Ở CHÂN MODAL */}
             <div className="p-6 border-t border-slate-800 flex justify-end gap-4 bg-slate-900">
               <button
                 onClick={() => setIsModalOpen(false)}
                 type="button"
-                className="px-6 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-slate-800 transition-colors"
+                className="px-6 py-2.5 rounded-xl font-bold text-slate-300 hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 HỦY BỎ
               </button>
@@ -352,8 +482,8 @@ const AdminMoviesPage = () => {
                 disabled={isSubmitting}
                 className="px-8 py-2.5 rounded-xl font-bold bg-amber-500 text-slate-950 hover:bg-amber-400 transition-colors shadow-lg cursor-pointer disabled:opacity-50 flex items-center gap-2"
               >
-                {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}{" "}
-                LƯU PHIM MỚI
+                {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
+                {editingId ? "CẬP NHẬT PHIM" : "LƯU PHIM MỚI"}
               </button>
             </div>
           </div>
