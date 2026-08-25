@@ -405,22 +405,7 @@ const AdminMoviesPage = () => {
                       <option value="T18">T18 (18+)</option>
                     </select>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-bold text-slate-400">
-                      Trạng thái
-                    </label>
-                    <select
-                      value={formData.status}
-                      onChange={(e) =>
-                        setFormData({ ...formData, status: e.target.value })
-                      }
-                      className="w-full bg-slate-950 border border-slate-700 text-white rounded-xl px-4 py-3 focus:border-amber-500 outline-none cursor-pointer"
-                    >
-                      <option value="NOW_PLAYING">Đang chiếu</option>
-                      <option value="COMING_SOON">Sắp chiếu</option>
-                      <option value="ARCHIVED">Lưu trữ (Ẩn)</option>
-                    </select>
-                  </div>
+
                   <div className="space-y-2" style={{ colorScheme: "dark" }}>
                     <label className="text-sm font-bold text-slate-400">
                       Ngày ra mắt

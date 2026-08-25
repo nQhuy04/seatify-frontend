@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import MovieCard from "../components/MovieCard";
 import QuickBooking from "../components/QuickBooking";
 import TrailerModal from "../components/TrailerModal";
+import HeroBanner from "../components/HeroBanner";
 import { fetchClient } from "../utils/apiClient";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
@@ -13,6 +14,7 @@ interface Movie {
   title: string;
   filmGenres: string | null;
   posterUrl: string | null;
+  backdropUrl: string | null;
   trailerUrl: string | null;
   ageRating: string;
   status: "NOW_PLAYING" | "COMING_SOON" | "ARCHIVED";
@@ -85,14 +87,7 @@ const HomePage = () => {
   return (
     <div className="w-full">
       {/* HERO BANNER */}
-      <div className="relative w-full h-[300px] md:h-[500px] bg-slate-800 rounded-2xl overflow-hidden mt-4">
-        <img
-          src="https://image.tmdb.org/t/p/original/8cdWjvZQUExUUTzyp4t6EDMubfO.jpg"
-          alt="Banner"
-          className="w-full h-full object-cover opacity-70"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent"></div>
-      </div>
+      <HeroBanner movies={nowPlayingMovies} onPlayTrailer={handlePlayTrailer} />
 
       <QuickBooking />
 
