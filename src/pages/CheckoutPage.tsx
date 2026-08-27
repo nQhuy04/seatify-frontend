@@ -112,6 +112,22 @@ const CheckoutPage = () => {
     return `${m}:${s}`;
   };
 
+  //Chuyển hướng thanh toán
+  const handlePayment = async () => {
+    try {
+      // 1. Gọi API Backend payment
+      const response = await fetchClient("/payments/create-url", {
+        method: "POST",
+        body: JSON.stringify({ bookingId: bookingId }),
+      });
+
+      // 2. ÉP TRÌNH DUYỆT CHUYỂN HƯỚNG SANG VNPAY (Đá khách văng khỏi trang mình)
+      window.location.href = response.data.paymentUrl;
+    } catch (error) {
+      if (error instanceof Error) toast.error(error.message);
+    }
+  };
+
   if (isLoading)
     return (
       <div className="min-h-[80vh] flex items-center justify-center text-amber-500 font-bold animate-pulse">
@@ -297,7 +313,10 @@ const CheckoutPage = () => {
                   </span>
                 </div>
 
-                <button className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-600 to-amber-500 text-white font-bold uppercase tracking-wider py-4 rounded-xl hover:from-amber-500 hover:to-amber-400 transition-all transform hover:-translate-y-1 shadow-lg hover:shadow-amber-500/25 cursor-pointer">
+                <button
+                  onClick={handlePayment} //Gọi handlePayment
+                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-amber-600 to-amber-500 text-white font-bold uppercase tracking-wider py-4 rounded-xl hover:from-amber-500 hover:to-amber-400 transition-all transform hover:-translate-y-1 shadow-lg hover:shadow-amber-500/25 cursor-pointer"
+                >
                   <Ticket className="w-5 h-5" /> THANH TOÁN
                 </button>
 

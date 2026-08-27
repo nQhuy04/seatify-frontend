@@ -15,6 +15,7 @@ import AdminLayout from "./layouts/AdminLayout";
 import AdminDashboardPage from "./pages/Admin/AdminDashboardPage";
 import AdminMoviesPage from "./pages/Admin/AdminMoviePage";
 import AdminRoute from "./components/AdminRoute";
+import PaymentSuccessPage from "./pages/PaymentSucces";
 import { Toaster } from "sonner";
 
 function App() {
@@ -32,6 +33,10 @@ function App() {
             <Route path="profile" element={<ProfilePage />} />
             <Route path="search" element={<SearchPage />} />
             <Route path="movies-status/:status" element={<MovieListPage />} />
+            <Route
+              path="payment-success/:bookingId"
+              element={<PaymentSuccessPage />}
+            />
             <Route path="*" element={<NotFoundPage />} />
           </Route>
 
