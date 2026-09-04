@@ -1,16 +1,9 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import {
-  Timer,
-  CreditCard,
-  MapPin,
-  CalendarDays,
-  Clock,
-  Ticket,
-  AlertCircle,
-} from "lucide-react";
-import { toast } from "sonner";
-import { fetchClient } from "../utils/apiClient";
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Timer, CreditCard, MapPin, CalendarDays, Clock, Ticket, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
+import { bookingService } from '../services/booking.service';
+import { paymentService } from '../services/payment.service';
 
 // --- ĐỊNH NGHĨA KHUÔN DỮ LIỆU ---
 interface TicketSeatData {
@@ -47,10 +40,10 @@ const CheckoutPage = () => {
   // Hàm xử lý Hủy Đơn Hàng (Chạy khi bấm Đồng Ý trên Modal)
   const executeCancelOrder = async () => {
     try {
-      await fetchClient(`/bookings/${bookingId}/cancel`, { method: "POST" });
-      toast.success("Đã hủy giao dịch và trả ghế thành công!");
+      await bookingService.cancelBooking(bookingId as string);
+      toast.success('Đã hủy giao dịch và trả ghế thành công!');
       setIsCancelModalOpen(false); // Đóng modal
-      navigate("/"); // Đá văng về trang chủ
+      navigate('/'); // Đá văng về trang chủ
     } catch (error) {
       if (error instanceof Error) toast.error(error.message);
       setIsCancelModalOpen(false);
@@ -61,7 +54,7 @@ const CheckoutPage = () => {
   useEffect(() => {
     const loadBooking = async () => {
       try {
-        const response = await fetchClient(`/bookings/${bookingId}`);
+        const response = await bookingService.getBookingById(bookingId as string);
         const data = response.data;
 
         // Lấy thời gian hết hạn từ cái ghế đầu tiên trong hóa đơn
@@ -71,17 +64,17 @@ const CheckoutPage = () => {
         // Tính số giây còn lại (Sử dụng getTime() để tránh bị lệch múi giờ)
         const secondsLeft = Math.floor((lockedUntil - now) / 1000);
 
-        if (secondsLeft <= 0 || data.status !== "PENDING") {
-          toast.error("Đơn hàng đã hết hạn hoặc đã được xử lý!");
-          navigate("/");
+        if (secondsLeft <= 0 || data.status !== 'PENDING') {
+          toast.error('Đơn hàng đã hết hạn hoặc đã được xử lý!');
+          navigate('/');
           return;
         }
 
         setBooking(data);
         setTimeLeft(secondsLeft); // Khởi động đồng hồ bằng số giây THẬT
       } catch {
-        toast.error("Không tìm thấy đơn hàng!");
-        navigate("/");
+        toast.error('Không tìm thấy đơn hàng!');
+        navigate('/');
       } finally {
         setIsLoading(false);
       }
@@ -95,8 +88,8 @@ const CheckoutPage = () => {
     if (!booking) return; // Chưa có data thì chưa đếm
 
     if (timeLeft <= 0) {
-      toast.error("Hết thời gian giữ ghế! Đơn hàng đã bị hủy.");
-      navigate("/");
+      toast.error('Hết thời gian giữ ghế! Đơn hàng đã bị hủy.');
+      navigate('/');
       return;
     }
 
@@ -107,8 +100,8 @@ const CheckoutPage = () => {
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60)
       .toString()
-      .padStart(2, "0");
-    const s = (seconds % 60).toString().padStart(2, "0");
+      .padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
     return `${m}:${s}`;
   };
 
@@ -116,10 +109,7 @@ const CheckoutPage = () => {
   const handlePayment = async () => {
     try {
       // 1. Gọi API Backend payment
-      const response = await fetchClient("/payments/create-url", {
-        method: "POST",
-        body: JSON.stringify({ bookingId: bookingId }),
-      });
+      const response = await paymentService.createUrl(bookingId as string);
 
       // 2. ÉP TRÌNH DUYỆT CHUYỂN HƯỚNG SANG VNPAY (Đá khách văng khỏi trang mình)
       window.location.href = response.data.paymentUrl;
@@ -143,9 +133,7 @@ const CheckoutPage = () => {
   const room = showtime.room;
   const cinema = room.cinema;
 
-  const seatNames = ticketSeats.map(
-    (ts: TicketSeatData) => `${ts.seat.row}${ts.seat.number}`,
-  );
+  const seatNames = ticketSeats.map((ts: TicketSeatData) => `${ts.seat.row}${ts.seat.number}`);
   const startTime = new Date(showtime.startTime);
 
   return (
@@ -158,9 +146,7 @@ const CheckoutPage = () => {
             <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center font-bold text-sm">
               1
             </div>
-            <span className="text-xs font-bold uppercase tracking-wider">
-              Chọn Ghế
-            </span>
+            <span className="text-xs font-bold uppercase tracking-wider">Chọn Ghế</span>
           </div>
           <div className="w-16 h-[2px] bg-slate-800 mb-5"></div>
           <div className="flex flex-col items-center gap-2">
@@ -176,9 +162,7 @@ const CheckoutPage = () => {
             <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-600 flex items-center justify-center font-bold text-sm">
               3
             </div>
-            <span className="text-xs font-bold uppercase tracking-wider">
-              Nhận Vé
-            </span>
+            <span className="text-xs font-bold uppercase tracking-wider">Nhận Vé</span>
           </div>
         </div>
 
@@ -187,8 +171,7 @@ const CheckoutPage = () => {
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg">
               <h3 className="text-xl font-bold text-white mb-6 uppercase border-b-2 border-slate-800 pb-3 flex items-center gap-2">
-                <CreditCard className="w-6 h-6 text-amber-500" /> Chọn phương
-                thức thanh toán
+                <CreditCard className="w-6 h-6 text-amber-500" /> Chọn phương thức thanh toán
               </h3>
 
               <div className="space-y-4">
@@ -200,31 +183,24 @@ const CheckoutPage = () => {
                       defaultChecked
                       className="w-5 h-5 accent-amber-500 cursor-pointer"
                     />
-                    <span className="text-white font-bold text-lg">
-                      Thanh toán qua VNPAY
-                    </span>
+                    <span className="text-white font-bold text-lg">Thanh toán qua VNPAY</span>
                   </div>
                   <div className="bg-white px-2 py-1 rounded shadow-sm">
-                    <span className="text-red-500 font-black italic tracking-tighter">
-                      VN
-                    </span>
-                    <span className="text-blue-600 font-black italic tracking-tighter">
-                      PAY
-                    </span>
+                    <span className="text-red-500 font-black italic tracking-tighter">VN</span>
+                    <span className="text-blue-600 font-black italic tracking-tighter">PAY</span>
                   </div>
                 </label>
               </div>
 
               <div className="mt-8 bg-slate-950 p-4 rounded-xl border border-slate-800 text-sm text-slate-400 leading-relaxed">
                 <p>
-                  🔹 Khách hàng:{" "}
+                  🔹 Khách hàng:{' '}
                   <span className="text-amber-500 font-bold">
                     {booking.guestName} ({booking.guestPhone})
                   </span>
                 </p>
                 <p>
-                  🔹 Mã đơn:{" "}
-                  <span className="font-mono text-white">{booking.id}</span>
+                  🔹 Mã đơn: <span className="font-mono text-white">{booking.id}</span>
                 </p>
               </div>
             </div>
@@ -265,17 +241,17 @@ const CheckoutPage = () => {
                   <div className="flex gap-3">
                     <CalendarDays className="w-5 h-5 text-amber-500 shrink-0" />
                     <p className="text-white font-bold mt-0.5">
-                      {startTime.toLocaleDateString("vi-VN")}
+                      {startTime.toLocaleDateString('vi-VN')}
                     </p>
                   </div>
 
                   <div className="flex gap-3">
                     <Clock className="w-5 h-5 text-amber-500 shrink-0" />
                     <p className="text-white font-bold mt-0.5">
-                      {startTime.toLocaleTimeString("vi-VN", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}{" "}
+                      {startTime.toLocaleTimeString('vi-VN', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}{' '}
                       - {room.name}
                     </p>
                   </div>
@@ -292,24 +268,18 @@ const CheckoutPage = () => {
                 <div className="space-y-3 mb-6">
                   <div className="flex justify-between items-center">
                     <span className="text-slate-400">Số lượng ghế</span>
-                    <span className="text-white font-bold">
-                      {ticketSeats.length} Vé
-                    </span>
+                    <span className="text-white font-bold">{ticketSeats.length} Vé</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-slate-400">Vị trí ghế</span>
-                    <span className="text-amber-500 font-bold text-lg">
-                      {seatNames.join(", ")}
-                    </span>
+                    <span className="text-amber-500 font-bold text-lg">{seatNames.join(', ')}</span>
                   </div>
                 </div>
 
                 <div className="flex justify-between items-end border-t border-slate-800 pt-4 mb-6">
-                  <span className="text-slate-400 font-bold uppercase text-sm">
-                    Tổng cộng
-                  </span>
+                  <span className="text-slate-400 font-bold uppercase text-sm">Tổng cộng</span>
                   <span className="text-3xl font-black text-amber-500">
-                    {booking.totalPrice.toLocaleString("vi-VN")}đ
+                    {booking.totalPrice.toLocaleString('vi-VN')}đ
                   </span>
                 </div>
 

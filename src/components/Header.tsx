@@ -1,16 +1,9 @@
-import { useState } from "react";
-import {
-  Search,
-  User,
-  Ticket,
-  Clapperboard,
-  LogOut,
-  ChevronDown,
-} from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import AuthModal from "./AuthModal";
-import { useAuth } from "../contexts/AuthContext";
-import { toast } from "sonner";
+import { useState } from 'react';
+import { Search, User, Ticket, Clapperboard, LogOut, ChevronDown } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import AuthModal from './AuthModal';
+import { useAuth } from '../contexts/AuthContext';
+import { toast } from 'sonner';
 
 const Header = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -23,28 +16,28 @@ const Header = () => {
   const navigate = useNavigate();
 
   // State lưu từ khóa tìm kiếm
-  const [keyword, setKeyword] = useState("");
+  const [keyword, setKeyword] = useState('');
 
   // Hàm thực thi khi bấm tìm kiếm
   const handleSearch = () => {
-    if (keyword.trim() !== "") {
+    if (keyword.trim() !== '') {
       // Nhảy sang trang search và truyền từ khóa lên URL
       navigate(`/search?keyword=${encodeURIComponent(keyword.trim())}`);
-      setKeyword(""); // Tự động xóa chữ trên thanh tìm kiếm cho gọn
+      setKeyword(''); // Tự động xóa chữ trên thanh tìm kiếm cho gọn
     }
   };
 
   // Hàm lắng nghe khi khách gõ bàn phím
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
+    if (e.key === 'Enter') {
       handleSearch();
     }
   };
 
   const handleLogout = () => {
     logout();
-    toast.success("Đã đăng xuất thành công!");
-    navigate("/"); // Đá về trang chủ
+    toast.success('Đã đăng xuất thành công!');
+    navigate('/'); // Đá về trang chủ
   };
 
   return (
@@ -52,9 +45,7 @@ const Header = () => {
       <div className="container mx-auto px-4 h-20 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 group cursor-pointer">
           <Clapperboard className="w-8 h-8 text-amber-500 group-hover:rotate-12 transition-transform duration-300" />
-          <span className="text-2xl font-black tracking-widest text-white">
-            SEATIFY
-          </span>
+          <span className="text-2xl font-black tracking-widest text-white">SEATIFY</span>
         </Link>
 
         {/* Thanh Tìm Kiếm */}
@@ -75,16 +66,10 @@ const Header = () => {
 
         <div className="flex items-center gap-6">
           <nav className="hidden lg:flex gap-6 font-semibold text-sm">
-            <Link
-              to="/movies"
-              className="hover:text-amber-500 transition-colors"
-            >
+            <Link to="/movies" className="hover:text-amber-500 transition-colors">
               Lịch chiếu
             </Link>
-            <Link
-              to="/cinemas"
-              className="hover:text-amber-500 transition-colors"
-            >
+            <Link to="/cinemas" className="hover:text-amber-500 transition-colors">
               Cụm rạp
             </Link>
           </nav>
@@ -117,12 +102,8 @@ const Header = () => {
                 {/* KHỐI DROPDOWN MENU (Chỉ hiện khi hover chuột vào) */}
                 <div className="absolute right-0 top-full mt-2 w-56 bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all transform origin-top-right group-hover:translate-y-0 translate-y-2 z-50">
                   <div className="p-4 border-b border-slate-800">
-                    <p className="text-white font-bold truncate">
-                      {user.fullName}
-                    </p>
-                    <p className="text-xs text-slate-400 truncate">
-                      {user.email}
-                    </p>
+                    <p className="text-white font-bold truncate">{user.fullName}</p>
+                    <p className="text-xs text-slate-400 truncate">{user.email}</p>
                   </div>
                   <div className="p-2 flex flex-col gap-1">
                     <Link
@@ -133,7 +114,7 @@ const Header = () => {
                     </Link>
 
                     {/* Bổ sung nút quản trị nếu là Admin */}
-                    {user.role === "ADMIN" && (
+                    {user.role === 'ADMIN' && (
                       <Link
                         to="/admin"
                         className="flex items-center gap-3 px-4 py-2.5 text-sm font-bold text-amber-500 hover:bg-amber-500 hover:text-slate-950 rounded-xl transition-colors mt-2 border border-amber-500/20"
@@ -163,10 +144,7 @@ const Header = () => {
         </div>
       </div>
 
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-      />
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
 
       {/* KHU VỰC MODAL XÁC NHẬN ĐĂNG XUẤT */}
       {isLogoutModalOpen && (

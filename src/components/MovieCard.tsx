@@ -1,6 +1,6 @@
-import { Play, Ticket, Clock, Globe, MessageCircle, Tags } from "lucide-react";
-import { Link } from "react-router-dom";
-import { toast } from "sonner";
+import { Play, Ticket, Clock, Globe, MessageCircle, Tags } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
 
 interface MovieCardProps {
   id: string | number;
@@ -22,8 +22,8 @@ const MovieCard = ({
   posterUrl,
   ageRating,
   duration = 120,
-  country = "Mỹ",
-  language = "Phụ đề Tiếng Việt",
+  country = 'Mỹ',
+  language = 'Phụ đề Tiếng Việt',
   trailerUrl,
   onPlayTrailer,
 }: MovieCardProps) => {
@@ -83,7 +83,7 @@ const MovieCard = ({
             onClick={(e) => {
               e.preventDefault(); // CHẶN LỆNH CHUYỂN TRANG CỦA THẺ LINK!
               if (onPlayTrailer && trailerUrl) onPlayTrailer(trailerUrl);
-              else toast.error("Trailer đang được cập nhật!");
+              else toast.error('Trailer đang được cập nhật!');
             }}
             className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg font-semibold text-sm text-slate-300 border border-slate-700 hover:bg-slate-800 hover:text-white transition-colors cursor-pointer"
           >

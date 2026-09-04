@@ -1,14 +1,9 @@
-import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import {
-  CheckCircle2,
-  MailCheck,
-  Lock,
-  UserPlus,
-  ArrowRight,
-} from "lucide-react";
-import { fetchClient } from "../utils/apiClient";
-import { toast } from "sonner";
+import { useEffect, useState } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { CheckCircle2, MailCheck, Lock, UserPlus, ArrowRight } from 'lucide-react';
+import { toast } from 'sonner';
+import { paymentService } from '../services/payment.service';
+import { bookingService } from '../services/booking.service';
 
 // --- KHUÔN DỮ LIỆU HÓA ĐƠN ---
 interface BookingData {
@@ -24,7 +19,7 @@ const PaymentSuccessPage = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   // State phục vụ tính năng Upsell (Tạo tài khoản từ Guest)
-  const [password, setPassword] = useState("");
+  const [password, setPassword] = useState('');
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [accountCreated, setAccountCreated] = useState(false);
 
@@ -32,16 +27,13 @@ const PaymentSuccessPage = () => {
     const confirmAndFetchData = async () => {
       try {
         // Chốt đơn dưới Backend
-        await fetchClient("/payments/confirm", {
-          method: "POST",
-          body: JSON.stringify({ bookingId }),
-        });
+        await paymentService.confirmPayment(bookingId as string);
 
         // Lấy thông tin hóa đơn
-        const res = await fetchClient(`/bookings/${bookingId}`);
+        const res = await bookingService.getBookingById(bookingId as string);
         setBooking(res.data);
       } catch (error) {
-        console.error("Lỗi khi chốt đơn:", error);
+        console.error('Lỗi khi chốt đơn:', error);
       } finally {
         setIsLoading(false);
       }
@@ -54,7 +46,7 @@ const PaymentSuccessPage = () => {
   const handleCreateAccount = async (e: React.FormEvent) => {
     e.preventDefault();
     if (password.length < 6) {
-      return toast.error("Mật khẩu phải có ít nhất 6 ký tự!");
+      return toast.error('Mật khẩu phải có ít nhất 6 ký tự!');
     }
 
     setIsCreatingAccount(true);
@@ -62,7 +54,7 @@ const PaymentSuccessPage = () => {
     setTimeout(() => {
       setIsCreatingAccount(false);
       setAccountCreated(true);
-      toast.success("Tạo tài khoản thành công! Mật khẩu đã được lưu.");
+      toast.success('Tạo tài khoản thành công! Mật khẩu đã được lưu.');
     }, 1500);
   };
 
@@ -73,15 +65,11 @@ const PaymentSuccessPage = () => {
       </div>
     );
   if (!booking)
-    return (
-      <div className="text-center text-white mt-20">
-        Không tìm thấy thông tin giao dịch!
-      </div>
-    );
+    return <div className="text-center text-white mt-20">Không tìm thấy thông tin giao dịch!</div>;
 
   // Nếu hóa đơn không có userId -> Là Khách vãng lai (Guest)
   const isGuest = !booking.userId;
-  const targetEmail = booking.guestEmail || "email của bạn";
+  const targetEmail = booking.guestEmail || 'email của bạn';
 
   return (
     <div className="py-12 min-h-[80vh] flex items-center justify-center">
@@ -99,9 +87,8 @@ const PaymentSuccessPage = () => {
               Thanh Toán Thành Công
             </h1>
             <p className="text-slate-400 mb-8">
-              Cảm ơn{" "}
-              <span className="text-white font-bold">{booking.guestName}</span>{" "}
-              đã lựa chọn Seatify.
+              Cảm ơn <span className="text-white font-bold">{booking.guestName}</span> đã lựa chọn
+              Seatify.
             </p>
 
             <div className="bg-slate-950 border border-slate-800 rounded-2xl p-6 flex flex-col items-center gap-4">
@@ -110,13 +97,11 @@ const PaymentSuccessPage = () => {
                 <p className="text-slate-300 font-medium mb-1">
                   Vé điện tử (QR Code) đã được gửi tới email:
                 </p>
-                <p className="text-amber-500 font-bold text-lg">
-                  {targetEmail}
-                </p>
+                <p className="text-amber-500 font-bold text-lg">{targetEmail}</p>
               </div>
               <p className="text-xs text-slate-500 mt-2">
-                Vui lòng kiểm tra hộp thư đến (hoặc thư mục Spam). Bạn chỉ cần
-                đưa mã QR trong email cho nhân viên để vào rạp.
+                Vui lòng kiểm tra hộp thư đến (hoặc thư mục Spam). Bạn chỉ cần đưa mã QR trong email
+                cho nhân viên để vào rạp.
               </p>
             </div>
           </div>
@@ -127,21 +112,14 @@ const PaymentSuccessPage = () => {
           <div className="mt-6 bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 rounded-3xl shadow-xl p-8 transform transition-all hover:-translate-y-1">
             <div className="flex items-center gap-3 mb-4">
               <UserPlus className="w-6 h-6 text-amber-500" />
-              <h3 className="text-lg font-black text-white uppercase">
-                Tạo tài khoản nhanh
-              </h3>
+              <h3 className="text-lg font-black text-white uppercase">Tạo tài khoản nhanh</h3>
             </div>
             <p className="text-sm text-slate-400 mb-6">
-              Hệ thống đã lưu email{" "}
-              <span className="text-white font-bold">{targetEmail}</span> của
-              bạn. Hãy tạo một mật khẩu để lần sau mua vé nhanh hơn và tích điểm
-              nhận ưu đãi nhé!
+              Hệ thống đã lưu email <span className="text-white font-bold">{targetEmail}</span> của
+              bạn. Hãy tạo một mật khẩu để lần sau mua vé nhanh hơn và tích điểm nhận ưu đãi nhé!
             </p>
 
-            <form
-              onSubmit={handleCreateAccount}
-              className="flex flex-col sm:flex-row gap-3"
-            >
+            <form onSubmit={handleCreateAccount} className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <Lock className="w-4 h-4 text-slate-500" />
@@ -159,7 +137,7 @@ const PaymentSuccessPage = () => {
                 disabled={isCreatingAccount}
                 className="bg-amber-500 text-slate-950 font-bold px-6 py-3 rounded-xl hover:bg-amber-400 transition-colors shadow-lg shadow-amber-500/20 whitespace-nowrap cursor-pointer disabled:opacity-50"
               >
-                {isCreatingAccount ? "ĐANG TẠO..." : "ĐĂNG KÝ NGAY"}
+                {isCreatingAccount ? 'ĐANG TẠO...' : 'ĐĂNG KÝ NGAY'}
               </button>
             </form>
           </div>
@@ -168,9 +146,7 @@ const PaymentSuccessPage = () => {
         {/* Thông báo tạo tài khoản thành công */}
         {accountCreated && (
           <div className="mt-6 bg-green-500/10 border border-green-500/20 rounded-3xl p-6 text-center">
-            <p className="text-green-500 font-bold">
-              🎉 Chào mừng bạn gia nhập cộng đồng Seatify!
-            </p>
+            <p className="text-green-500 font-bold">🎉 Chào mừng bạn gia nhập cộng đồng Seatify!</p>
           </div>
         )}
 
@@ -180,7 +156,7 @@ const PaymentSuccessPage = () => {
             to="/"
             className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors font-bold group cursor-pointer"
           >
-            Tiếp tục khám phá phim{" "}
+            Tiếp tục khám phá phim{' '}
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>

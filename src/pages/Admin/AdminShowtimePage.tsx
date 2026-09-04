@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
-import { CalendarPlus, Loader2, Film, MapPin, Clock } from "lucide-react";
-// SỬA LỖI 1: Lùi 2 cấp thư mục (../../) để ra đúng src/utils
-import { fetchClient } from "../../utils/apiClient";
-import { toast } from "sonner";
+import { useState, useEffect } from 'react';
+import { CalendarPlus, Loader2, Film, MapPin, Clock } from 'lucide-react';
+import { toast } from 'sonner';
+import { showtimeService } from '../../services/showtime.service';
+import { movieService } from '../../services/movie.service';
+import { cinemaService } from '../../services/cinema.service';
 
 // --- SỬA LỖI ANY: ĐỊNH NGHĨA KHUÔN DỮ LIỆU ---
 interface Movie {
@@ -38,10 +39,7 @@ const CustomDropdown = ({
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div
-      className="relative w-1/5"
-      onBlur={() => setTimeout(() => setIsOpen(false), 200)}
-    >
+    <div className="relative w-1/5" onBlur={() => setTimeout(() => setIsOpen(false), 200)}>
       <button
         type="button"
         disabled={disabled}
@@ -61,7 +59,7 @@ const CustomDropdown = ({
                 onChange(opt);
                 setIsOpen(false);
               }}
-              className={`p-2 cursor-pointer text-center font-bold transition-colors ${value === opt ? "bg-amber-500 text-slate-950" : "text-slate-300 hover:bg-slate-800 hover:text-white"}`}
+              className={`p-2 cursor-pointer text-center font-bold transition-colors ${value === opt ? 'bg-amber-500 text-slate-950' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}
             >
               {opt}
             </li>
@@ -82,27 +80,27 @@ const AdminShowtimePage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
-    movieId: "",
-    cinemaId: "",
-    roomId: "",
-    startTime: "",
-    endTime: "",
+    movieId: '',
+    cinemaId: '',
+    roomId: '',
+    startTime: '',
+    endTime: '',
   });
 
   useEffect(() => {
     const loadMasterData = async () => {
       try {
         const [moviesRes, cinemasRes] = await Promise.all([
-          fetchClient("/movies"),
-          fetchClient("/cinemas"),
+          movieService.getAllMovie(),
+          cinemaService.getAllCinemas(),
         ]);
 
         // Dùng khuôn Movie thay vì any
-        setMovies(moviesRes.data.filter((m: Movie) => m.status !== "ARCHIVED"));
+        setMovies(moviesRes.data.filter((m: Movie) => m.status !== 'ARCHIVED'));
         setCinemas(cinemasRes.data);
       } catch {
         // SỬA LỖI UNUSED VAR: Nếu không xài thì bỏ luôn chữ (error)
-        toast.error("Lỗi khi tải dữ liệu Phim & Rạp!");
+        toast.error('Lỗi khi tải dữ liệu Phim & Rạp!');
       } finally {
         setIsLoadingData(false);
       }
@@ -112,7 +110,7 @@ const AdminShowtimePage = () => {
 
   const handleCinemaChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedCinemaId = e.target.value;
-    setFormData({ ...formData, cinemaId: selectedCinemaId, roomId: "" });
+    setFormData({ ...formData, cinemaId: selectedCinemaId, roomId: '' });
 
     if (selectedCinemaId) {
       const selectedCinema = cinemas.find((c) => c.id === selectedCinemaId);
@@ -130,38 +128,18 @@ const AdminShowtimePage = () => {
 
   // --- LOGIC: TỰ ĐỘNG TÍNH GIỜ KẾT THÚC & ÉP TRÒN 5 PHÚT ---
   // --- CHUẨN BỊ MẢNG GIỜ & PHÚT CHO DROPDOWN ---
-  const hoursList = Array.from({ length: 24 }, (_, i) =>
-    i.toString().padStart(2, "0"),
-  );
-  const minutesList = [
-    "00",
-    "05",
-    "10",
-    "15",
-    "20",
-    "25",
-    "30",
-    "35",
-    "40",
-    "45",
-    "50",
-    "55",
-  ]; // Khóa cứng 12 tùy chọn
+  const hoursList = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
+  const minutesList = ['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55']; // Khóa cứng 12 tùy chọn
 
   // --- BÓC TÁCH GIÁ TRỊ HIỆN TẠI TỪ STATE ---
   // Ví dụ formData.startTime là "2026-08-20T17:25"
   const currentStartStr = formData.startTime || toLocalISOString(new Date());
-  const startDatePart = currentStartStr.split("T")[0]; // Lấy "2026-08-20"
-  const startHourPart = currentStartStr.split("T")[1]?.substring(0, 2) || "12"; // Lấy "17"
-  const startMinutePart =
-    currentStartStr.split("T")[1]?.substring(3, 5) || "00"; // Lấy "25"
+  const startDatePart = currentStartStr.split('T')[0]; // Lấy "2026-08-20"
+  const startHourPart = currentStartStr.split('T')[1]?.substring(0, 2) || '12'; // Lấy "17"
+  const startMinutePart = currentStartStr.split('T')[1]?.substring(3, 5) || '00'; // Lấy "25"
 
   // --- LOGIC: TỰ ĐỘNG TÍNH GIỜ KẾT THÚC KHI ĐỔI NGÀY/GIỜ/PHÚT ---
-  const updateCustomStartTime = (
-    newDate: string,
-    newHour: string,
-    newMinute: string,
-  ) => {
+  const updateCustomStartTime = (newDate: string, newHour: string, newMinute: string) => {
     if (!formData.movieId) return;
 
     // Ráp lại thành chuỗi chuẩn ISO
@@ -174,9 +152,7 @@ const AdminShowtimePage = () => {
     const selectedMovie = movies.find((m) => m.id === formData.movieId);
     if (selectedMovie) {
       const endDateObj = new Date(startDateObj);
-      endDateObj.setMinutes(
-        endDateObj.getMinutes() + selectedMovie.duration + 15,
-      );
+      endDateObj.setMinutes(endDateObj.getMinutes() + selectedMovie.duration + 15);
       newEndTimeStr = toLocalISOString(endDateObj);
     }
 
@@ -189,13 +165,8 @@ const AdminShowtimePage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (
-      !formData.movieId ||
-      !formData.roomId ||
-      !formData.startTime ||
-      !formData.endTime
-    ) {
-      return toast.error("Vui lòng điền đầy đủ thông tin!");
+    if (!formData.movieId || !formData.roomId || !formData.startTime || !formData.endTime) {
+      return toast.error('Vui lòng điền đầy đủ thông tin!');
     }
 
     try {
@@ -203,23 +174,20 @@ const AdminShowtimePage = () => {
       const startUTC = new Date(formData.startTime).toISOString();
       const endUTC = new Date(formData.endTime).toISOString();
 
-      await fetchClient("/showtimes", {
-        method: "POST",
-        body: JSON.stringify({
-          movieId: formData.movieId,
-          roomId: formData.roomId,
-          startTime: startUTC,
-          endTime: endUTC,
-        }),
+      await showtimeService.createShowtime({
+        movieId: formData.movieId,
+        roomId: formData.roomId,
+        startTime: startUTC,
+        endTime: endUTC,
       });
 
-      toast.success("Tạo suất chiếu thành công!");
+      toast.success('Tạo suất chiếu thành công!');
       setFormData({
-        movieId: "",
-        cinemaId: "",
-        roomId: "",
-        startTime: "",
-        endTime: "",
+        movieId: '',
+        cinemaId: '',
+        roomId: '',
+        startTime: '',
+        endTime: '',
       });
       setAvailableRooms([]);
     } catch (error) {
@@ -227,7 +195,7 @@ const AdminShowtimePage = () => {
       if (error instanceof Error) {
         toast.error(error.message);
       } else {
-        toast.error("Lỗi khi tạo suất chiếu!");
+        toast.error('Lỗi khi tạo suất chiếu!');
       }
     } finally {
       setIsSubmitting(false);
@@ -235,11 +203,7 @@ const AdminShowtimePage = () => {
   };
 
   if (isLoadingData)
-    return (
-      <div className="p-8 text-amber-500 font-bold animate-pulse">
-        Đang tải dữ liệu...
-      </div>
-    );
+    return <div className="p-8 text-amber-500 font-bold animate-pulse">Đang tải dữ liệu...</div>;
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
@@ -259,9 +223,7 @@ const AdminShowtimePage = () => {
             </label>
             <select
               value={formData.movieId}
-              onChange={(e) =>
-                setFormData({ ...formData, movieId: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, movieId: e.target.value })}
               className="w-full bg-slate-950 border border-slate-700 text-white rounded-xl px-4 py-3 focus:border-amber-500 outline-none transition-colors cursor-pointer"
             >
               <option value="">-- Vui lòng chọn phim --</option>
@@ -299,9 +261,7 @@ const AdminShowtimePage = () => {
               </label>
               <select
                 value={formData.roomId}
-                onChange={(e) =>
-                  setFormData({ ...formData, roomId: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, roomId: e.target.value })}
                 disabled={!formData.cinemaId}
                 className="w-full bg-slate-950 border border-slate-700 text-white rounded-xl px-4 py-3 focus:border-amber-500 outline-none transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -317,10 +277,7 @@ const AdminShowtimePage = () => {
 
           {/* CỘT 3: THỜI GIAN CHIẾU */}
           {/* CỘT 3: THỜI GIAN CHIẾU (CUSTOM SPLIT UI) */}
-          <div
-            className="grid grid-cols-1 md:grid-cols-2 gap-6"
-            style={{ colorScheme: "dark" }}
-          >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6" style={{ colorScheme: 'dark' }}>
             {/* --- Ô CHỌN GIỜ BẮT ĐẦU (TÁCH LÀM 3 KHỐI) --- */}
             <div className="space-y-2">
               <label className="text-sm font-bold text-slate-400 flex items-center gap-2">
@@ -331,14 +288,10 @@ const AdminShowtimePage = () => {
                 {/* 1. Nút chọn Ngày */}
                 <input
                   type="date"
-                  min={toLocalISOString(new Date()).split("T")[0]}
+                  min={toLocalISOString(new Date()).split('T')[0]}
                   value={startDatePart}
                   onChange={(e) =>
-                    updateCustomStartTime(
-                      e.target.value,
-                      startHourPart,
-                      startMinutePart,
-                    )
+                    updateCustomStartTime(e.target.value, startHourPart, startMinutePart)
                   }
                   disabled={!formData.movieId}
                   className="w-3/5 bg-slate-950 border border-slate-700 text-white rounded-xl px-4 py-3 focus:border-amber-500 outline-none transition-colors cursor-pointer disabled:opacity-50"
@@ -371,8 +324,7 @@ const AdminShowtimePage = () => {
             {/* --- Ô CHỌN GIỜ KẾT THÚC (KHÓA CỨNG) --- */}
             <div className="space-y-2">
               <label className="text-sm font-bold text-slate-400 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-slate-600" /> Giờ Kết Thúc (Tự
-                động tính)
+                <Clock className="w-4 h-4 text-slate-600" /> Giờ Kết Thúc (Tự động tính)
               </label>
               <input
                 type="datetime-local"
@@ -392,11 +344,10 @@ const AdminShowtimePage = () => {
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="w-5 h-5 animate-spin" /> ĐANG TẠO SUẤT
-                  CHIẾU & 180 VÉ...
+                  <Loader2 className="w-5 h-5 animate-spin" /> ĐANG TẠO SUẤT CHIẾU & 180 VÉ...
                 </>
               ) : (
-                "XÁC NHẬN TẠO SUẤT CHIẾU"
+                'XÁC NHẬN TẠO SUẤT CHIẾU'
               )}
             </button>
           </div>

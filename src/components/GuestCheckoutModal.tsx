@@ -1,8 +1,8 @@
-import { useState } from "react";
-import { X, Mail, User, Phone, Ticket, Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { fetchClient } from "../utils/apiClient";
-import { toast } from "sonner";
+import { useState } from 'react';
+import { X, Mail, User, Phone, Ticket, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { bookingService } from '../services/booking.service';
 
 // 1. Thêm thuộc tính showtimeId vào khuôn Props
 interface GuestCheckoutModalProps {
@@ -24,9 +24,9 @@ const GuestCheckoutModal = ({
   const [isLoading, setIsLoading] = useState(false); // Trạng thái đang gọi API
 
   const [guestData, setGuestData] = useState({
-    fullName: "",
-    email: "",
-    phone: "",
+    fullName: '',
+    email: '',
+    phone: '',
   });
 
   if (!isOpen) return null;
@@ -34,25 +34,22 @@ const GuestCheckoutModal = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!guestData.fullName || !guestData.email || !guestData.phone) {
-      toast.error("Vui lòng điền đầy đủ thông tin để nhận vé!");
+      toast.error('Vui lòng điền đầy đủ thông tin để nhận vé!');
       return;
     }
 
     // 2. GỌI API KHÓA GHẾ XUỐNG BACKEND
     try {
       setIsLoading(true);
-      const response = await fetchClient("/bookings/hold", {
-        method: "POST",
-        body: JSON.stringify({
-          showtimeId: showtimeId,
-          seatNames: selectedSeats,
-          guestInfo: guestData,
-          totalPrice: totalPrice,
-        }),
+      const response = await bookingService.holdSeats({
+        showtimeId: showtimeId,
+        seatNames: selectedSeats,
+        guestInfo: guestData,
+        totalPrice: totalPrice,
       });
 
       // 3. THÀNH CÔNG: Chuyển hướng sang trang Thanh Toán kèm theo ID Hóa đơn thật!
-      toast.success("Giữ ghế thành công!");
+      toast.success('Giữ ghế thành công!');
       onClose();
       navigate(`/checkout/${response.data.id}`);
     } catch (error) {
@@ -88,25 +85,18 @@ const GuestCheckoutModal = ({
             Thông Tin Nhận Vé
           </h2>
           <p className="text-slate-400 text-center text-sm mb-6">
-            Bạn đang mua vé với tư cách Khách. Vui lòng nhập đúng Email để nhận
-            mã QR.
+            Bạn đang mua vé với tư cách Khách. Vui lòng nhập đúng Email để nhận mã QR.
           </p>
 
           <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 mb-6 flex justify-between items-center">
             <div>
-              <p className="text-slate-500 text-xs font-bold uppercase mb-1">
-                Ghế đã chọn
-              </p>
-              <p className="text-amber-500 font-bold">
-                {selectedSeats.join(", ")}
-              </p>
+              <p className="text-slate-500 text-xs font-bold uppercase mb-1">Ghế đã chọn</p>
+              <p className="text-amber-500 font-bold">{selectedSeats.join(', ')}</p>
             </div>
             <div className="text-right">
-              <p className="text-slate-500 text-xs font-bold uppercase mb-1">
-                Tổng thanh toán
-              </p>
+              <p className="text-slate-500 text-xs font-bold uppercase mb-1">Tổng thanh toán</p>
               <p className="text-white font-black text-xl">
-                {totalPrice.toLocaleString("vi-VN")} đ
+                {totalPrice.toLocaleString('vi-VN')} đ
               </p>
             </div>
           </div>
@@ -120,9 +110,7 @@ const GuestCheckoutModal = ({
                 type="text"
                 placeholder="Họ và tên"
                 value={guestData.fullName}
-                onChange={(e) =>
-                  setGuestData({ ...guestData, fullName: e.target.value })
-                }
+                onChange={(e) => setGuestData({ ...guestData, fullName: e.target.value })}
                 className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
               />
             </div>
@@ -135,9 +123,7 @@ const GuestCheckoutModal = ({
                 type="email"
                 placeholder="Email nhận vé"
                 value={guestData.email}
-                onChange={(e) =>
-                  setGuestData({ ...guestData, email: e.target.value })
-                }
+                onChange={(e) => setGuestData({ ...guestData, email: e.target.value })}
                 className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
               />
             </div>
@@ -150,9 +136,7 @@ const GuestCheckoutModal = ({
                 type="tel"
                 placeholder="Số điện thoại"
                 value={guestData.phone}
-                onChange={(e) =>
-                  setGuestData({ ...guestData, phone: e.target.value })
-                }
+                onChange={(e) => setGuestData({ ...guestData, phone: e.target.value })}
                 className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-colors"
               />
             </div>
@@ -167,7 +151,7 @@ const GuestCheckoutModal = ({
                   <Loader2 className="w-5 h-5 animate-spin" /> ĐANG KHÓA GHẾ...
                 </>
               ) : (
-                "TIẾN HÀNH THANH TOÁN"
+                'TIẾN HÀNH THANH TOÁN'
               )}
             </button>
           </form>

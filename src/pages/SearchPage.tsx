@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
-import { fetchClient } from "../utils/apiClient";
-import MovieCard from "../components/MovieCard";
-import TrailerModal from "../components/TrailerModal";
-import { SearchX, Loader2 } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { fetchClient } from '../utils/apiClient';
+import MovieCard from '../components/MovieCard';
+import TrailerModal from '../components/TrailerModal';
+import { SearchX, Loader2 } from 'lucide-react';
 
 // Định nghĩa khuôn cho bộ phim lấy từ API về
 interface Movie {
@@ -19,16 +19,14 @@ interface Movie {
 const SearchPage = () => {
   // Hook của React Router để đọc tham số URL (?keyword=...)
   const [searchParams] = useSearchParams();
-  const keyword = searchParams.get("keyword") || "";
+  const keyword = searchParams.get('keyword') || '';
 
   const [movies, setMovies] = useState<Movie[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // State quản lý Trailer
   const [isTrailerOpen, setIsTrailerOpen] = useState(false);
-  const [currentTrailerUrl, setCurrentTrailerUrl] = useState<string | null>(
-    null,
-  );
+  const [currentTrailerUrl, setCurrentTrailerUrl] = useState<string | null>(null);
 
   // Hàm hứng link trailer từ MovieCard bắn lên
   const handlePlayTrailer = (url: string) => {
@@ -41,7 +39,7 @@ const SearchPage = () => {
       try {
         setIsLoading(true);
         // Lấy tất cả phim từ DB lên (Vì số lượng phim ít nên ta lấy hết rồi lọc ở FE cho nhanh)
-        const response = await fetchClient("/movies");
+        const response = await fetchClient('/movies');
 
         // Dùng Javascript để lọc: Chuyển tên phim và từ khóa về chữ thường hết để so sánh không phân biệt hoa/thường
         const filteredMovies = response.data.filter((movie: Movie) =>
@@ -50,7 +48,7 @@ const SearchPage = () => {
 
         setMovies(filteredMovies);
       } catch (error) {
-        console.error("Lỗi tìm kiếm:", error);
+        console.error('Lỗi tìm kiếm:', error);
       } finally {
         setIsLoading(false);
       }
@@ -69,9 +67,8 @@ const SearchPage = () => {
             KẾT QUẢ TÌM KIẾM
           </h1>
           <p className="text-slate-400">
-            Tìm thấy{" "}
-            <span className="text-amber-500 font-bold">{movies.length}</span>{" "}
-            kết quả cho từ khóa: <span className="text-white">"{keyword}"</span>
+            Tìm thấy <span className="text-amber-500 font-bold">{movies.length}</span> kết quả cho
+            từ khóa: <span className="text-white">"{keyword}"</span>
           </p>
         </div>
 
@@ -88,8 +85,7 @@ const SearchPage = () => {
               KHÔNG TÌM THẤY PHIM
             </h3>
             <p className="text-slate-500 mt-4 text-center">
-              Rất tiếc, hiện tại hệ thống không có phim nào khớp với từ khóa của
-              bạn.
+              Rất tiếc, hiện tại hệ thống không có phim nào khớp với từ khóa của bạn.
               <br /> Vui lòng thử lại với tên khác.
             </p>
           </div>
@@ -101,8 +97,8 @@ const SearchPage = () => {
                 key={movie.id}
                 id={movie.id}
                 title={movie.title}
-                genre={movie.filmGenres || "Đang cập nhật"}
-                posterUrl={movie.posterUrl || ""}
+                genre={movie.filmGenres || 'Đang cập nhật'}
+                posterUrl={movie.posterUrl || ''}
                 trailerUrl={movie.trailerUrl || undefined}
                 onPlayTrailer={handlePlayTrailer}
                 ageRating={movie.ageRating}

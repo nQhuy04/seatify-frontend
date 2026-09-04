@@ -1,17 +1,10 @@
-import { useState, useEffect } from "react";
-import { fetchClient } from "../utils/apiClient";
-import { toast } from "sonner";
-import { Link, useParams } from "react-router-dom";
-import {
-  Play,
-  Tags,
-  Clock,
-  Globe,
-  MessageCircle,
-  UserCheck,
-  MapPin,
-} from "lucide-react";
-import TrailerModal from "../components/TrailerModal";
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner';
+import { Link, useParams } from 'react-router-dom';
+import { Play, Tags, Clock, Globe, MessageCircle, UserCheck, MapPin } from 'lucide-react';
+import TrailerModal from '../components/TrailerModal';
+import { showtimeService } from '../services/showtime.service';
+import { movieService } from '../services/movie.service';
 
 // --- INTERFACE (Khuôn dữ liệu chi tiết phim) ---
 interface MovieDetailData {
@@ -63,42 +56,30 @@ interface CinemaGroup {
 }
 
 const getAgeDescription = (rating: string) => {
-  if (rating === "P")
-    return "Phim được phép phổ biến đến người xem ở mọi độ tuổi.";
-  if (rating === "T13")
-    return "Phim dành cho khán giả từ đủ 13 tuổi trở lên (13+).";
-  if (rating === "T16")
-    return "Phim dành cho khán giả từ đủ 16 tuổi trở lên (16+).";
-  if (rating === "T18")
-    return "Phim dành cho khán giả từ đủ 18 tuổi trở lên (18+).";
-  return "Chưa phân loại";
+  if (rating === 'P') return 'Phim được phép phổ biến đến người xem ở mọi độ tuổi.';
+  if (rating === 'T13') return 'Phim dành cho khán giả từ đủ 13 tuổi trở lên (13+).';
+  if (rating === 'T16') return 'Phim dành cho khán giả từ đủ 16 tuổi trở lên (16+).';
+  if (rating === 'T18') return 'Phim dành cho khán giả từ đủ 18 tuổi trở lên (18+).';
+  return 'Chưa phân loại';
 };
 
 // --- TẠO DANH SÁCH NGÀY ĐỘNG (5 NGÀY TỚI) ---
 const generateUpcomingDates = () => {
   const dates = [];
   const today = new Date();
-  const dayNames = [
-    "Chủ Nhật",
-    "Thứ Hai",
-    "Thứ Ba",
-    "Thứ Tư",
-    "Thứ Năm",
-    "Thứ Sáu",
-    "Thứ Bảy",
-  ];
+  const dayNames = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
 
   for (let i = 0; i < 5; i++) {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
 
-    const day = d.getDate().toString().padStart(2, "0");
-    const month = (d.getMonth() + 1).toString().padStart(2, "0");
+    const day = d.getDate().toString().padStart(2, '0');
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
     const year = d.getFullYear();
 
     dates.push({
       display: `${day}/${month}`,
-      dayOfWeek: i === 0 ? "Hôm nay" : dayNames[d.getDay()],
+      dayOfWeek: i === 0 ? 'Hôm nay' : dayNames[d.getDay()],
       value: `${year}-${month}-${day}`, // Chuẩn YYYY-MM-DD để gửi API
     });
   }
@@ -128,9 +109,7 @@ const MovieDetailPage = () => {
     const loadMovieDetail = async () => {
       try {
         setIsLoading(true);
-        const response = await fetchClient(`/movies/${movieId}`, {
-          method: "GET",
-        });
+        const response = await movieService.getMovieById(movieId as string);
         setMovie(response.data);
       } catch (error) {
         if (error instanceof Error) toast.error(error.message);
@@ -148,16 +127,12 @@ const MovieDetailPage = () => {
       try {
         setIsLoadingShowtimes(true);
         // Gửi Query String chứa movieId và date
-        const res = await fetchClient(
-          `/showtimes?movieId=${movieId}&date=${selectedDate}`,
-        );
+        const res = await showtimeService.getShowtimesByFilter(movieId, selectedDate);
 
         // THUẬT TOÁN GỘP NHÓM (GROUPING ALGORITHM)
         const groupedCinemas: CinemaGroup[] = [];
         res.data.forEach((st: ShowtimeApiResponse) => {
-          let cinema = groupedCinemas.find(
-            (c) => c.cinemaName === st.cinemaName,
-          );
+          let cinema = groupedCinemas.find((c) => c.cinemaName === st.cinemaName);
           if (!cinema) {
             cinema = {
               cinemaName: st.cinemaName,
@@ -173,10 +148,10 @@ const MovieDetailPage = () => {
             cinema.rooms.push(room);
           }
 
-          const timeString = new Date(st.startTime).toLocaleTimeString(
-            "vi-VN",
-            { hour: "2-digit", minute: "2-digit" },
-          );
+          const timeString = new Date(st.startTime).toLocaleTimeString('vi-VN', {
+            hour: '2-digit',
+            minute: '2-digit',
+          });
           room.times.push({
             id: st.id,
             time: timeString,
@@ -234,7 +209,7 @@ const MovieDetailPage = () => {
             <div className="w-full md:w-1/3 lg:w-1/4 shrink-0">
               <div className="rounded-2xl overflow-hidden shadow-2xl shadow-amber-500/10 border border-slate-800 relative">
                 <img
-                  src={movie.posterUrl || ""}
+                  src={movie.posterUrl || ''}
                   alt={movie.title}
                   className="w-full h-auto object-cover"
                 />
@@ -249,9 +224,7 @@ const MovieDetailPage = () => {
               <h1 className="text-4xl md:text-5xl font-black text-white uppercase tracking-wider mb-2">
                 {movie.title}
               </h1>
-              <p className="text-xl text-slate-400 font-medium italic mb-8">
-                {movie.title}
-              </p>
+              <p className="text-xl text-slate-400 font-medium italic mb-8">{movie.title}</p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 mb-8 mt-6">
                 {movie.filmGenres && (
@@ -286,38 +259,26 @@ const MovieDetailPage = () => {
 
               <div className="space-y-4 mb-8 text-sm md:text-base">
                 <p>
-                  <span className="text-slate-500 font-semibold">
-                    Đạo diễn:
-                  </span>{" "}
-                  <span className="text-white font-medium">
-                    {movie.director}
-                  </span>
+                  <span className="text-slate-500 font-semibold">Đạo diễn:</span>{' '}
+                  <span className="text-white font-medium">{movie.director}</span>
                 </p>
                 <p>
-                  <span className="text-slate-500 font-semibold">
-                    Diễn viên:
-                  </span>{" "}
+                  <span className="text-slate-500 font-semibold">Diễn viên:</span>{' '}
                   <span className="text-white font-medium">{movie.cast}</span>
                 </p>
                 <p>
-                  <span className="text-slate-500 font-semibold">
-                    Khởi chiếu:
-                  </span>{" "}
+                  <span className="text-slate-500 font-semibold">Khởi chiếu:</span>{' '}
                   <span className="text-white font-medium">
                     {movie.releaseDate
-                      ? new Date(movie.releaseDate).toLocaleDateString("vi-VN")
-                      : "Đang cập nhật"}
+                      ? new Date(movie.releaseDate).toLocaleDateString('vi-VN')
+                      : 'Đang cập nhật'}
                   </span>
                 </p>
               </div>
 
               <div className="mb-8">
-                <h3 className="text-xl font-bold text-white mb-3">
-                  NỘI DUNG PHIM
-                </h3>
-                <p className="text-slate-400 leading-relaxed text-justify">
-                  {movie.description}
-                </p>
+                <h3 className="text-xl font-bold text-white mb-3">NỘI DUNG PHIM</h3>
+                <p className="text-slate-400 leading-relaxed text-justify">{movie.description}</p>
               </div>
 
               <div>
@@ -351,14 +312,12 @@ const MovieDetailPage = () => {
                 onClick={() => setSelectedDate(dateObj.value)}
                 className={`flex flex-col items-center justify-center w-24 py-3 rounded-xl border transition-all cursor-pointer ${
                   selectedDate === dateObj.value
-                    ? "bg-amber-500 border-amber-500 text-slate-950 font-black shadow-lg shadow-amber-500/20 scale-105"
-                    : "bg-slate-900 border-slate-700 text-slate-400 hover:bg-slate-800 font-bold"
+                    ? 'bg-amber-500 border-amber-500 text-slate-950 font-black shadow-lg shadow-amber-500/20 scale-105'
+                    : 'bg-slate-900 border-slate-700 text-slate-400 hover:bg-slate-800 font-bold'
                 }`}
               >
                 <span className="text-sm">{dateObj.display}</span>
-                <span className="text-xs font-medium mt-1">
-                  {dateObj.dayOfWeek}
-                </span>
+                <span className="text-xs font-medium mt-1">{dateObj.dayOfWeek}</span>
               </button>
             ))}
           </div>
@@ -382,21 +341,15 @@ const MovieDetailPage = () => {
                   <div className="flex items-start gap-3 mb-6 pb-6 border-b border-slate-800">
                     <MapPin className="w-6 h-6 text-amber-500 shrink-0 mt-1" />
                     <div>
-                      <h4 className="text-xl font-bold text-white">
-                        {cinema.cinemaName}
-                      </h4>
-                      <p className="text-sm text-slate-500 mt-1">
-                        {cinema.address}
-                      </p>
+                      <h4 className="text-xl font-bold text-white">{cinema.cinemaName}</h4>
+                      <p className="text-sm text-slate-500 mt-1">{cinema.address}</p>
                     </div>
                   </div>
 
                   <div className="space-y-6">
                     {cinema.rooms.map((room, rIndex) => (
                       <div key={rIndex}>
-                        <p className="text-sm font-semibold text-slate-400 mb-3">
-                          {room.roomName}
-                        </p>
+                        <p className="text-sm font-semibold text-slate-400 mb-3">{room.roomName}</p>
                         <div className="flex flex-wrap gap-3">
                           {room.times.map((timeObj, tIndex) => (
                             <Link
@@ -404,8 +357,8 @@ const MovieDetailPage = () => {
                               key={tIndex}
                               className={`px-5 py-2.5 rounded-lg border font-bold transition-colors ${
                                 timeObj.isFull
-                                  ? "border-slate-800 bg-slate-900 text-slate-600 pointer-events-none"
-                                  : "border-slate-700 bg-slate-950 text-slate-200 hover:border-amber-500 hover:text-amber-500"
+                                  ? 'border-slate-800 bg-slate-900 text-slate-600 pointer-events-none'
+                                  : 'border-slate-700 bg-slate-950 text-slate-200 hover:border-amber-500 hover:text-amber-500'
                               }`}
                             >
                               {timeObj.time}

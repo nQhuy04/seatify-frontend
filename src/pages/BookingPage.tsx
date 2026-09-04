@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { Minus, Plus, DoorOpen, Loader2, Ticket } from "lucide-react";
-import { fetchClient } from "../utils/apiClient";
-import { toast } from "sonner";
-import GuestCheckoutModal from "../components/GuestCheckoutModal";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { Minus, Plus, DoorOpen, Loader2, Ticket } from 'lucide-react';
+import { toast } from 'sonner';
+import GuestCheckoutModal from '../components/GuestCheckoutModal';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { bookingService } from '../services/booking.service';
+import { showtimeService } from '../services/showtime.service';
 
 // Định nghĩa khuôn thông tin Suất chiếu
 interface ShowtimeInfo {
@@ -47,22 +48,19 @@ const BookingPage = () => {
     if (!user) return; // Đề phòng
     try {
       setIsHolding(true);
-      const response = await fetchClient("/bookings/hold", {
-        method: "POST",
-        body: JSON.stringify({
-          showtimeId: showtimeId,
-          seatNames: selectedSeats,
-          totalPrice: totalPrice,
-          userId: user.id, // Truyền ID khách xuống để Backend gắn vào hóa đơn
-          guestInfo: {
-            fullName: user.fullName,
-            email: user.email,
-            phone: user.phone || "000",
-          },
-        }),
+      const response = await bookingService.holdSeats({
+        showtimeId: showtimeId as string,
+        seatNames: selectedSeats,
+        totalPrice: totalPrice,
+        userId: user.id,
+        guestInfo: {
+          fullName: user.fullName,
+          email: user.email,
+          phone: user.phone || '000',
+        },
       });
 
-      toast.success("Giữ ghế thành công!");
+      toast.success('Giữ ghế thành công!');
       navigate(`/checkout/${response.data.id}`); // Bay sang trang thanh toán
     } catch (error) {
       if (error instanceof Error) toast.error(error.message);
@@ -75,8 +73,8 @@ const BookingPage = () => {
   // Hàm kiểm tra một ghế thuộc loại gì và trả về tiền phụ thu
   const getSeatSurcharge = (seatId: string): number => {
     const row = seatId.charAt(0); // Lấy chữ cái đầu (A, B, C...)
-    if (["D", "E", "F", "G", "H", "I"].includes(row)) return 20000; // VIP: +20k
-    if (["J"].includes(row)) return 25000; // Couple: +25k/ghế
+    if (['D', 'E', 'F', 'G', 'H', 'I'].includes(row)) return 20000; // VIP: +20k
+    if (['J'].includes(row)) return 25000; // Couple: +25k/ghế
     return 0; // Thường: Không phụ thu
   };
 
@@ -85,10 +83,7 @@ const BookingPage = () => {
 
   // 2. Tính tổng tiền phụ thu từ những ghế ĐANG CHỌN
   // reduce là hàm gom mảng siêu việt của Javascript
-  const totalSurcharge = selectedSeats.reduce(
-    (sum, seatId) => sum + getSeatSurcharge(seatId),
-    0,
-  );
+  const totalSurcharge = selectedSeats.reduce((sum, seatId) => sum + getSeatSurcharge(seatId), 0);
 
   // 3. TỔNG TIỀN CUỐI CÙNG = Vé cơ bản + Phụ thu ghế
   const totalPrice = baseTicketPrice + totalSurcharge;
@@ -99,8 +94,8 @@ const BookingPage = () => {
         setIsLoadingSeats(true);
         // Gọi 2 API CÙNG LÚC
         const [seatsRes, infoRes] = await Promise.all([
-          fetchClient(`/showtimes/${showtimeId}/seats`),
-          fetchClient(`/showtimes/${showtimeId}`),
+          showtimeService.getSeats(showtimeId as string),
+          showtimeService.getShowtimeById(showtimeId as string),
         ]);
 
         setBookedSeats(seatsRes.data);
@@ -117,42 +112,34 @@ const BookingPage = () => {
 
   // 3. LOGIC TĂNG GIẢM VÉ
   const handleTicketChange = (
-    type: "adult" | "student",
-    operation: "increase" | "decrease",
+    type: 'adult' | 'student',
+    operation: 'increase' | 'decrease',
     skipWarning = false,
   ) => {
     // BẮT BỆNH HSSV: Nếu bấm Tăng vé HSSV, mà vé đang là 0, và chưa skipWarning -> Bật Popup!
-    if (
-      type === "student" &&
-      operation === "increase" &&
-      tickets.student === 0 &&
-      !skipWarning
-    ) {
+    if (type === 'student' && operation === 'increase' && tickets.student === 0 && !skipWarning) {
       setIsStudentWarningOpen(true);
       return; // Dừng hàm lại, không cho tăng vé vội
     }
 
     setTickets((prev) => {
       const currentCount = prev[type];
-      if (operation === "decrease" && currentCount === 0) return prev;
+      if (operation === 'decrease' && currentCount === 0) return prev;
 
-      const newTotal =
-        prev.adult + prev.student + (operation === "increase" ? 1 : -1);
-      if (operation === "increase" && newTotal > 8) {
-        toast.error("Bạn chỉ được mua tối đa 8 vé cho mỗi giao dịch!");
+      const newTotal = prev.adult + prev.student + (operation === 'increase' ? 1 : -1);
+      if (operation === 'increase' && newTotal > 8) {
+        toast.error('Bạn chỉ được mua tối đa 8 vé cho mỗi giao dịch!');
         return prev;
       }
 
-      if (operation === "decrease" && newTotal < selectedSeats.length) {
+      if (operation === 'decrease' && newTotal < selectedSeats.length) {
         setSelectedSeats([]);
-        toast.error(
-          "Số vé ít hơn số ghế đã chọn. Hệ thống đã xóa ghế, vui lòng chọn lại!",
-        );
+        toast.error('Số vé ít hơn số ghế đã chọn. Hệ thống đã xóa ghế, vui lòng chọn lại!');
       }
 
       return {
         ...prev,
-        [type]: operation === "increase" ? currentCount + 1 : currentCount - 1,
+        [type]: operation === 'increase' ? currentCount + 1 : currentCount - 1,
       };
     });
   };
@@ -160,7 +147,7 @@ const BookingPage = () => {
   // 4. LOGIC CLICK GHẾ
   const handleSeatClick = (seatId: string) => {
     if (totalTickets === 0) {
-      toast.error("Vui lòng chọn số lượng vé trước khi chọn ghế!");
+      toast.error('Vui lòng chọn số lượng vé trước khi chọn ghế!');
       return;
     }
 
@@ -183,7 +170,7 @@ const BookingPage = () => {
     let i = start;
 
     while (i <= end) {
-      const isCouple = ["J"].includes(row);
+      const isCouple = ['J'].includes(row);
 
       // LOGIC XỬ LÝ GHẾ ĐÔI (SOFA DÍNH LIỀN)
       if (isCouple) {
@@ -193,25 +180,19 @@ const BookingPage = () => {
         // Kiểm tra ghế đã bán bằng DATA THẬT
         const isBooked1 = bookedSeats.includes(seatId1);
         const isSelected1 = selectedSeats.includes(seatId1);
-        let class1 =
-          "bg-pink-900/20 border-pink-500/50 text-pink-500 hover:bg-pink-500/30";
-        if (isBooked1)
-          class1 =
-            "bg-slate-900 text-slate-700 border-slate-800 cursor-not-allowed";
+        let class1 = 'bg-pink-900/20 border-pink-500/50 text-pink-500 hover:bg-pink-500/30';
+        if (isBooked1) class1 = 'bg-slate-900 text-slate-700 border-slate-800 cursor-not-allowed';
         else if (isSelected1)
           class1 =
-            "bg-amber-500 border-amber-500 text-slate-950 font-black shadow-lg shadow-amber-500/50 z-10";
+            'bg-amber-500 border-amber-500 text-slate-950 font-black shadow-lg shadow-amber-500/50 z-10';
 
         const isBooked2 = bookedSeats.includes(seatId2);
         const isSelected2 = selectedSeats.includes(seatId2);
-        let class2 =
-          "bg-pink-900/20 border-pink-500/50 text-pink-500 hover:bg-pink-500/30";
-        if (isBooked2)
-          class2 =
-            "bg-slate-900 text-slate-700 border-slate-800 cursor-not-allowed";
+        let class2 = 'bg-pink-900/20 border-pink-500/50 text-pink-500 hover:bg-pink-500/30';
+        if (isBooked2) class2 = 'bg-slate-900 text-slate-700 border-slate-800 cursor-not-allowed';
         else if (isSelected2)
           class2 =
-            "bg-amber-500 border-amber-500 text-slate-950 font-black shadow-lg shadow-amber-500/50 z-10";
+            'bg-amber-500 border-amber-500 text-slate-950 font-black shadow-lg shadow-amber-500/50 z-10';
 
         seats.push(
           <div key={`${row}${i}-pair`} className="flex">
@@ -236,23 +217,19 @@ const BookingPage = () => {
       // LOGIC XỬ LÝ GHẾ THƯỜNG / VIP
       else {
         const seatId = `${row}${i}`;
-        const isVIP = ["D", "E", "F", "G", "H", "I"].includes(row);
+        const isVIP = ['D', 'E', 'F', 'G', 'H', 'I'].includes(row);
 
         // Kiểm tra ghế đã bán bằng DATA THẬT
         const isBooked = bookedSeats.includes(seatId);
         const isSelected = selectedSeats.includes(seatId);
 
-        let seatClass =
-          "bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700";
-        if (isBooked)
-          seatClass =
-            "bg-slate-900 text-slate-700 border-slate-800 cursor-not-allowed";
+        let seatClass = 'bg-slate-800 border-slate-600 text-slate-300 hover:bg-slate-700';
+        if (isBooked) seatClass = 'bg-slate-900 text-slate-700 border-slate-800 cursor-not-allowed';
         else if (isSelected)
           seatClass =
-            "bg-amber-500 border-amber-500 text-slate-950 font-black shadow-lg shadow-amber-500/50 scale-110 z-10";
+            'bg-amber-500 border-amber-500 text-slate-950 font-black shadow-lg shadow-amber-500/50 scale-110 z-10';
         else if (isVIP)
-          seatClass =
-            "bg-slate-800 border-amber-500/50 text-amber-500 hover:bg-amber-500/20";
+          seatClass = 'bg-slate-800 border-amber-500/50 text-amber-500 hover:bg-amber-500/20';
 
         seats.push(
           <button
@@ -271,9 +248,9 @@ const BookingPage = () => {
   };
 
   // Các nhóm hàng ghế
-  const rowsPart1 = ["A", "B", "C", "D"];
-  const rowsPart2 = ["E", "F", "G", "H"];
-  const rowsPart3 = ["I", "J"];
+  const rowsPart1 = ['A', 'B', 'C', 'D'];
+  const rowsPart2 = ['E', 'F', 'G', 'H'];
+  const rowsPart3 = ['I', 'J'];
 
   return (
     <div className="py-12 pb-40">
@@ -283,8 +260,7 @@ const BookingPage = () => {
             ĐẶT VÉ TRỰC TUYẾN
           </h1>
           <p className="text-slate-400">
-            Suất chiếu ID:{" "}
-            <span className="text-amber-500 font-bold">{showtimeId}</span>
+            Suất chiếu ID: <span className="text-amber-500 font-bold">{showtimeId}</span>
           </p>
         </div>
 
@@ -299,14 +275,12 @@ const BookingPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
             <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex items-center justify-between shadow-lg hover:border-amber-500/50 transition-colors">
               <div>
-                <h3 className="text-lg font-bold text-white uppercase">
-                  Người Lớn
-                </h3>
+                <h3 className="text-lg font-bold text-white uppercase">Người Lớn</h3>
                 <p className="text-amber-500 font-semibold mt-1">80,000 VNĐ</p>
               </div>
               <div className="flex items-center gap-4 bg-slate-950 p-2 rounded-xl border border-slate-800">
                 <button
-                  onClick={() => handleTicketChange("adult", "decrease")}
+                  onClick={() => handleTicketChange('adult', 'decrease')}
                   disabled={tickets.adult === 0}
                   className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-800 text-white hover:bg-amber-500 hover:text-slate-950 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -316,7 +290,7 @@ const BookingPage = () => {
                   {tickets.adult}
                 </span>
                 <button
-                  onClick={() => handleTicketChange("adult", "increase")}
+                  onClick={() => handleTicketChange('adult', 'increase')}
                   className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-800 text-white hover:bg-amber-500 hover:text-slate-950 transition-colors cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
@@ -326,14 +300,12 @@ const BookingPage = () => {
 
             <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex items-center justify-between shadow-lg hover:border-amber-500/50 transition-colors">
               <div>
-                <h3 className="text-lg font-bold text-white uppercase">
-                  HSSV - U22
-                </h3>
+                <h3 className="text-lg font-bold text-white uppercase">HSSV - U22</h3>
                 <p className="text-amber-500 font-semibold mt-1">55,000 VNĐ</p>
               </div>
               <div className="flex items-center gap-4 bg-slate-950 p-2 rounded-xl border border-slate-800">
                 <button
-                  onClick={() => handleTicketChange("student", "decrease")}
+                  onClick={() => handleTicketChange('student', 'decrease')}
                   disabled={tickets.student === 0}
                   className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-800 text-white hover:bg-amber-500 hover:text-slate-950 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -343,7 +315,7 @@ const BookingPage = () => {
                   {tickets.student}
                 </span>
                 <button
-                  onClick={() => handleTicketChange("student", "increase")}
+                  onClick={() => handleTicketChange('student', 'increase')}
                   className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-800 text-white hover:bg-amber-500 hover:text-slate-950 transition-colors cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
@@ -380,9 +352,7 @@ const BookingPage = () => {
               </div>
               <div className="absolute right-4 sm:right-10 top-0 flex flex-col items-center border border-green-500/50 bg-green-500/10 text-green-500 px-4 py-2 rounded-lg shadow-[0_0_15px_rgba(34,197,94,0.1)]">
                 <DoorOpen className="w-6 h-6 mb-1" />
-                <span className="text-[10px] font-black uppercase tracking-wider">
-                  Lối Vào
-                </span>
+                <span className="text-[10px] font-black uppercase tracking-wider">Lối Vào</span>
               </div>
             </div>
 
@@ -442,7 +412,7 @@ const BookingPage = () => {
                   {rowsPart3.map((r) => (
                     <div
                       key={r}
-                      className={`flex gap-2 ${r === "J" ? "justify-between w-full" : ""}`}
+                      className={`flex gap-2 ${r === 'J' ? 'justify-between w-full' : ''}`}
                     >
                       {renderSeats(r, 1, 4)}
                     </div>
@@ -470,7 +440,7 @@ const BookingPage = () => {
                   {rowsPart3.map((r) => (
                     <div
                       key={r}
-                      className={`flex gap-2 ${r === "J" ? "justify-between w-full" : ""}`}
+                      className={`flex gap-2 ${r === 'J' ? 'justify-between w-full' : ''}`}
                     >
                       {renderSeats(r, 5, 14)}
                     </div>
@@ -498,7 +468,7 @@ const BookingPage = () => {
                   {rowsPart3.map((r) => (
                     <div
                       key={r}
-                      className={`flex gap-2 ${r === "J" ? "justify-between w-full" : ""}`}
+                      className={`flex gap-2 ${r === 'J' ? 'justify-between w-full' : ''}`}
                     >
                       {renderSeats(r, 15, 18)}
                     </div>
@@ -511,9 +481,7 @@ const BookingPage = () => {
             <div className="flex flex-wrap items-center justify-center gap-8 mt-16 pt-8 border-t border-slate-800">
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 border border-slate-600 rounded"></div>
-                <span className="text-sm text-slate-400 font-medium">
-                  Thường
-                </span>
+                <span className="text-sm text-slate-400 font-medium">Thường</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 border border-amber-500/50 text-amber-500 rounded flex items-center justify-center text-[10px] font-bold">
@@ -526,21 +494,15 @@ const BookingPage = () => {
                   <div className="w-4 h-6 border-y border-l border-pink-500/50 rounded-l"></div>
                   <div className="w-4 h-6 border-y border-r border-pink-500/50 rounded-r"></div>
                 </div>
-                <span className="text-sm text-slate-400 font-medium">
-                  Ghế Đôi
-                </span>
+                <span className="text-sm text-slate-400 font-medium">Ghế Đôi</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 bg-slate-800 rounded"></div>
-                <span className="text-sm text-slate-400 font-medium">
-                  Đã bán
-                </span>
+                <span className="text-sm text-slate-400 font-medium">Đã bán</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 bg-amber-500 rounded shadow-lg shadow-amber-500/50"></div>
-                <span className="text-sm text-slate-400 font-medium">
-                  Đang chọn
-                </span>
+                <span className="text-sm text-slate-400 font-medium">Đang chọn</span>
               </div>
             </div>
           </div>
@@ -555,12 +517,12 @@ const BookingPage = () => {
             <h3 className="text-white font-black uppercase tracking-wider text-lg">
               {showtimeInfo
                 ? `${showtimeInfo.movie.title} (${showtimeInfo.movie.ageRating})`
-                : "Đang tải..."}
+                : 'Đang tải...'}
             </h3>
             <p className="text-slate-400 text-sm font-medium">
               {showtimeInfo
                 ? `${showtimeInfo.room.cinema.name} - ${showtimeInfo.room.name}`
-                : "Đang tải..."}
+                : 'Đang tải...'}
             </p>
           </div>
 
@@ -569,17 +531,13 @@ const BookingPage = () => {
               <span className="text-[10px] text-slate-500 font-bold uppercase">
                 Thời gian giữ vé
               </span>
-              <span className="text-amber-500 font-black text-xl leading-none">
-                05:00
-              </span>
+              <span className="text-amber-500 font-black text-xl leading-none">05:00</span>
             </div>
 
             <div className="hidden sm:flex flex-col">
               <span className="text-slate-400 text-sm">Ghế đang chọn:</span>
               <span className="text-white font-bold max-w-[150px] truncate">
-                {selectedSeats.length > 0
-                  ? selectedSeats.join(", ")
-                  : "Chưa chọn ghế"}
+                {selectedSeats.length > 0 ? selectedSeats.join(', ') : 'Chưa chọn ghế'}
               </span>
             </div>
           </div>
@@ -588,21 +546,17 @@ const BookingPage = () => {
             <div className="flex flex-col items-end">
               <span className="text-slate-400 text-xs font-medium">
                 {totalSurcharge > 0
-                  ? `+ Phụ thu ghế: ${totalSurcharge.toLocaleString("vi-VN")}đ`
-                  : "Tạm tính:"}
+                  ? `+ Phụ thu ghế: ${totalSurcharge.toLocaleString('vi-VN')}đ`
+                  : 'Tạm tính:'}
               </span>
               <span className="text-2xl font-black text-white">
-                {totalPrice.toLocaleString("vi-VN")} VNĐ
+                {totalPrice.toLocaleString('vi-VN')} VNĐ
               </span>
             </div>
 
             <button
               // Vừa kiểm tra logic vé, vừa khóa nút lại (disabled) nếu đang trong trạng thái isHolding
-              disabled={
-                totalTickets === 0 ||
-                selectedSeats.length !== totalTickets ||
-                isHolding
-              }
+              disabled={totalTickets === 0 || selectedSeats.length !== totalTickets || isHolding}
               onClick={() => {
                 if (user) {
                   handleDirectBooking();
@@ -648,16 +602,12 @@ const BookingPage = () => {
             </h3>
 
             <p className="text-slate-400 mb-8 leading-relaxed text-sm">
-              Bạn đang mua hạng vé đặc biệt dành cho HSSV, U22. Vui lòng mang
-              theo{" "}
-              <span className="text-amber-500 font-bold">
-                CCCD hoặc Thẻ HSSV có dán ảnh
-              </span>{" "}
-              để xác minh tại quầy trước khi vào rạp.
+              Bạn đang mua hạng vé đặc biệt dành cho HSSV, U22. Vui lòng mang theo{' '}
+              <span className="text-amber-500 font-bold">CCCD hoặc Thẻ HSSV có dán ảnh</span> để xác
+              minh tại quầy trước khi vào rạp.
               <br />
               <br />
-              Nhân viên rạp có quyền từ chối cho bạn vào xem nếu không thực hiện
-              đúng quy định này!
+              Nhân viên rạp có quyền từ chối cho bạn vào xem nếu không thực hiện đúng quy định này!
             </p>
 
             <div className="flex gap-4">
@@ -670,7 +620,7 @@ const BookingPage = () => {
               <button
                 onClick={() => {
                   setIsStudentWarningOpen(false); // Tắt popup
-                  handleTicketChange("student", "increase", true); // Ép cộng 1 vé và bỏ qua cảnh báo
+                  handleTicketChange('student', 'increase', true); // Ép cộng 1 vé và bỏ qua cảnh báo
                 }}
                 className="flex-1 py-3.5 rounded-xl font-bold bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-lg hover:from-amber-500 hover:to-amber-400 transform transition-transform hover:-translate-y-1 cursor-pointer"
               >

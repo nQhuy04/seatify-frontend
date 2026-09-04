@@ -1,17 +1,8 @@
-import { useState } from "react";
-import { fetchClient } from "../utils/apiClient";
-import {
-  X,
-  Mail,
-  Lock,
-  User,
-  Phone,
-  CalendarDays,
-  Eye,
-  EyeOff,
-} from "lucide-react";
-import { toast } from "sonner";
-import { useAuth } from "../contexts/AuthContext";
+import { useState } from 'react';
+import { X, Mail, Lock, User, Phone, CalendarDays, Eye, EyeOff } from 'lucide-react';
+import { toast } from 'sonner';
+import { useAuth } from '../contexts/AuthContext';
+import { authService } from '../services/auth.service';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -20,19 +11,19 @@ interface AuthModalProps {
 
 const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   // Thay isLogin thành activeTab để quản lý UI chuẩn hơn
-  const [activeTab, setActiveTab] = useState<"login" | "register">("login");
+  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
 
   // State tắt bật con mắt mật khẩu
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    confirmPassword: "",
-    fullName: "",
-    phone: "",
-    birthDay: "",
+    email: '',
+    password: '',
+    confirmPassword: '',
+    fullName: '',
+    phone: '',
+    birthDay: '',
   });
   const { login } = useAuth();
 
@@ -50,28 +41,23 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
       // ==========================================
       // XỬ LÝ ĐĂNG NHẬP
       // ==========================================
-      if (activeTab === "login") {
+      if (activeTab === 'login') {
         if (!formData.email || !formData.password) {
-          return toast.error("Vui lòng nhập Email và Mật khẩu!");
+          return toast.error('Vui lòng nhập Email và Mật khẩu!');
         }
         if (!emailRegex.test(formData.email)) {
-          return toast.error("Định dạng Email không hợp lệ!");
+          return toast.error('Định dạng Email không hợp lệ!');
         }
 
         // Gọi API
-        const response = await fetchClient("/auth/login", {
-          method: "POST",
-          body: JSON.stringify({
-            email: formData.email,
-            password: formData.password,
-          }),
+        const response = await authService.login({
+          email: formData.email,
+          password: formData.password,
         });
 
         // Lấy thông tin user và token từ BE trả về, ném vào hàm login
         login(response.data.user, response.data.token);
-        toast.success(
-          `Đăng nhập thành công! Chào ${response.data.user.fullName}`,
-        );
+        toast.success(`Đăng nhập thành công! Chào ${response.data.user.fullName}`);
         onClose();
       }
 
@@ -86,41 +72,36 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
           !formData.phone ||
           !formData.birthDay
         ) {
-          return toast.error("Vui lòng điền đầy đủ thông tin!");
+          return toast.error('Vui lòng điền đầy đủ thông tin!');
         }
         if (!emailRegex.test(formData.email)) {
-          return toast.error("Định dạng Email không hợp lệ!");
+          return toast.error('Định dạng Email không hợp lệ!');
         }
         if (!passwordRegex.test(formData.password)) {
-          return toast.error(
-            "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ và số!",
-          );
+          return toast.error('Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ và số!');
         }
         if (formData.password !== formData.confirmPassword) {
-          return toast.error("Mật khẩu xác nhận không khớp!");
+          return toast.error('Mật khẩu xác nhận không khớp!');
         }
 
         // Bắn Data xuống BE
-        await fetchClient("/auth/register", {
-          method: "POST",
-          body: JSON.stringify({
-            email: formData.email,
-            password: formData.password,
-            fullName: formData.fullName,
-            phone: formData.phone,
-            birthDay: formData.birthDay,
-          }),
+        await authService.register({
+          email: formData.email,
+          password: formData.password,
+          fullName: formData.fullName,
+          phone: formData.phone,
+          birthDay: formData.birthDay,
         });
 
-        toast.success("Đăng ký thành công! Bạn có thể đăng nhập.");
-        setActiveTab("login");
-        setFormData({ ...formData, password: "", confirmPassword: "" });
+        toast.success('Đăng ký thành công! Bạn có thể đăng nhập.');
+        setActiveTab('login');
+        setFormData({ ...formData, password: '', confirmPassword: '' });
       }
     } catch (error) {
       if (error instanceof Error) {
         toast.error(error.message); // Hứng lỗi từ BE và in ra Toast màu đỏ
       } else {
-        toast.error("Có lỗi không xác định xảy ra!");
+        toast.error('Có lỗi không xác định xảy ra!');
       }
     }
   };
@@ -139,21 +120,21 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
         {/* --- KHU VỰC TABS (Giống Cinestar nhưng màu Premium) --- */}
         <div className="flex w-full h-16 border-b border-slate-800">
           <button
-            onClick={() => setActiveTab("login")}
+            onClick={() => setActiveTab('login')}
             className={`flex-1 flex items-center justify-center font-black uppercase tracking-wider transition-colors cursor-pointer ${
-              activeTab === "login"
-                ? "bg-amber-500 text-slate-950"
-                : "bg-slate-800/50 text-slate-400 hover:bg-slate-800 hover:text-white"
+              activeTab === 'login'
+                ? 'bg-amber-500 text-slate-950'
+                : 'bg-slate-800/50 text-slate-400 hover:bg-slate-800 hover:text-white'
             }`}
           >
             Đăng Nhập
           </button>
           <button
-            onClick={() => setActiveTab("register")}
+            onClick={() => setActiveTab('register')}
             className={`flex-1 flex items-center justify-center font-black uppercase tracking-wider transition-colors cursor-pointer ${
-              activeTab === "register"
-                ? "bg-amber-500 text-slate-950"
-                : "bg-slate-800/50 text-slate-400 hover:bg-slate-800 hover:text-white"
+              activeTab === 'register'
+                ? 'bg-amber-500 text-slate-950'
+                : 'bg-slate-800/50 text-slate-400 hover:bg-slate-800 hover:text-white'
             }`}
           >
             Đăng Ký
@@ -164,7 +145,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
         <div className="p-8 sm:p-10 max-h-[80vh] overflow-y-auto custom-scrollbar">
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* CÁC TRƯỜNG DÀNH RIÊNG CHO ĐĂNG KÝ */}
-            {activeTab === "register" && (
+            {activeTab === 'register' && (
               <>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -174,9 +155,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                     type="text"
                     placeholder="Họ và tên *"
                     value={formData.fullName}
-                    onChange={(e) =>
-                      setFormData({ ...formData, fullName: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                     className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-amber-500 transition-colors"
                   />
                 </div>
@@ -190,26 +169,19 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                       type="tel"
                       placeholder="Số điện thoại *"
                       value={formData.phone}
-                      onChange={(e) =>
-                        setFormData({ ...formData, phone: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-amber-500 transition-colors"
                     />
                   </div>
                   {/* color-scheme: dark giúp cái icon lịch (calendar picker) tự động có màu tối trên Chrome */}
-                  <div
-                    className="relative flex-1"
-                    style={{ colorScheme: "dark" }}
-                  >
+                  <div className="relative flex-1" style={{ colorScheme: 'dark' }}>
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                       <CalendarDays className="w-5 h-5 text-slate-500" />
                     </div>
                     <input
                       type="date"
                       value={formData.birthDay}
-                      onChange={(e) =>
-                        setFormData({ ...formData, birthDay: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, birthDay: e.target.value })}
                       className="w-full bg-slate-950 border border-slate-700 text-slate-400 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-amber-500 transition-colors"
                     />
                   </div>
@@ -226,9 +198,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                 type="email"
                 placeholder="Địa chỉ Email *"
                 value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-amber-500 transition-colors"
               />
             </div>
@@ -239,12 +209,10 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                 <Lock className="w-5 h-5 text-slate-500" />
               </div>
               <input
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? 'text' : 'password'}
                 placeholder="Mật khẩu *"
                 value={formData.password}
-                onChange={(e) =>
-                  setFormData({ ...formData, password: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-xl pl-12 pr-12 py-3 focus:outline-none focus:border-amber-500 transition-colors"
               />
               <button
@@ -252,22 +220,18 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-amber-500 cursor-pointer"
               >
-                {showPassword ? (
-                  <Eye className="w-5 h-5" />
-                ) : (
-                  <EyeOff className="w-5 h-5" />
-                )}
+                {showPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
               </button>
             </div>
 
             {/* CONFIRM PASSWORD (Chỉ hiện khi Đăng Ký) */}
-            {activeTab === "register" && (
+            {activeTab === 'register' && (
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                   <Lock className="w-5 h-5 text-slate-500" />
                 </div>
                 <input
-                  type={showConfirmPassword ? "text" : "password"}
+                  type={showConfirmPassword ? 'text' : 'password'}
                   placeholder="Xác nhận mật khẩu *"
                   value={formData.confirmPassword}
                   onChange={(e) =>
@@ -293,7 +257,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
             )}
 
             {/* Quên mật khẩu (Chỉ hiện lúc Đăng nhập) */}
-            {activeTab === "login" && (
+            {activeTab === 'login' && (
               <div className="flex justify-end pt-1">
                 <button
                   type="button"
@@ -309,7 +273,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
               type="submit"
               className="w-full bg-gradient-to-r from-amber-600 to-amber-500 text-white font-bold uppercase tracking-wider py-3.5 rounded-xl hover:from-amber-500 hover:to-amber-400 transition-all transform hover:-translate-y-1 shadow-lg hover:shadow-amber-500/25 mt-4 cursor-pointer"
             >
-              {activeTab === "login" ? "ĐĂNG NHẬP NGAY" : "TẠO TÀI KHOẢN"}
+              {activeTab === 'login' ? 'ĐĂNG NHẬP NGAY' : 'TẠO TÀI KHOẢN'}
             </button>
           </form>
         </div>

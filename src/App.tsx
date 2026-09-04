@@ -1,53 +1,21 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import MainLayout from "./layouts/MainLayout";
-import HomePage from "./pages/HomePage";
-import NotFoundPage from "./pages/NotFoundPage";
-import MovieDetailPage from "./pages/MovieDetailPage";
-import ScrollToTop from "./components/ScrollToTop";
-import BookingPage from "./pages/BookingPage";
-import CheckoutPage from "./pages/CheckoutPage";
-import { AuthProvider } from "./contexts/AuthContext";
-import ProfilePage from "./pages/ProfilePage";
-import SearchPage from "./pages/SearchPage";
-import MovieListPage from "./pages/MovieListPage";
-import AdminShowtimePage from "./pages/Admin/AdminShowtimePage";
-import AdminLayout from "./layouts/AdminLayout";
-import AdminDashboardPage from "./pages/Admin/AdminDashboardPage";
-import AdminMoviesPage from "./pages/Admin/AdminMoviePage";
-import AdminRoute from "./components/AdminRoute";
-import PaymentSuccessPage from "./pages/PaymentSucces";
-import { Toaster } from "sonner";
+import { BrowserRouter } from 'react-router-dom';
+import { Toaster } from 'sonner';
+import { AuthProvider } from './contexts/AuthContext';
+import ScrollToTop from './components/ScrollToTop';
+import AppRoutes from './routes/AppRoutes';
 
 function App() {
   return (
+    // 1. Trạm phát sóng User
     <AuthProvider>
+      {/* 2. Máy phát thông báo */}
       <Toaster richColors position="top-right" duration={3000} />
+      {/* 3. Hệ thống chuyển trang */}
       <BrowserRouter>
+        {/* 4. Lính canh tự cuộn chuột */}
         <ScrollToTop />
-        <Routes>
-          <Route path="/" element={<MainLayout />}>
-            <Route index element={<HomePage />} />
-            <Route path="movies/:movieId" element={<MovieDetailPage />} />
-            <Route path="booking/:showtimeId" element={<BookingPage />} />
-            <Route path="checkout/:bookingId" element={<CheckoutPage />} />
-            <Route path="profile" element={<ProfilePage />} />
-            <Route path="search" element={<SearchPage />} />
-            <Route path="movies-status/:status" element={<MovieListPage />} />
-            <Route
-              path="payment-success/:bookingId"
-              element={<PaymentSuccessPage />}
-            />
-            <Route path="*" element={<NotFoundPage />} />
-          </Route>
-
-          <Route element={<AdminRoute />}>
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<AdminDashboardPage />} />
-              <Route path="showtimes" element={<AdminShowtimePage />} />
-              <Route path="movies" element={<AdminMoviesPage />} />
-            </Route>
-          </Route>
-        </Routes>
+        {/* 5. Toàn bộ giao diện trang web nằm ở đây */}
+        <AppRoutes />
       </BrowserRouter>
     </AuthProvider>
   );

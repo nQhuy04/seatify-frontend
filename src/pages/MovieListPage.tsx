@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { fetchClient } from "../utils/apiClient";
-import MovieCard from "../components/MovieCard";
-import TrailerModal from "../components/TrailerModal";
-import { Loader2, Film } from "lucide-react";
-import { toast } from "sonner";
+import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { fetchClient } from '../utils/apiClient';
+import MovieCard from '../components/MovieCard';
+import TrailerModal from '../components/TrailerModal';
+import { Loader2, Film } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface Movie {
   id: string;
@@ -13,7 +13,7 @@ interface Movie {
   posterUrl: string | null;
   trailerUrl: string | null;
   ageRating: string;
-  status: "NOW_PLAYING" | "COMING_SOON" | "ARCHIVED";
+  status: 'NOW_PLAYING' | 'COMING_SOON' | 'ARCHIVED';
   duration: number;
 }
 
@@ -25,15 +25,13 @@ const MovieListPage = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   // 1. CHUYỂN ĐỔI NGÔN NGỮ (TỪ URL SANG DATABASE)
-  const isNowPlaying = status === "now-playing";
-  const pageTitle = isNowPlaying ? "PHIM ĐANG CHIẾU" : "PHIM SẮP CHIẾU";
-  const dbStatus = isNowPlaying ? "NOW_PLAYING" : "COMING_SOON";
+  const isNowPlaying = status === 'now-playing';
+  const pageTitle = isNowPlaying ? 'PHIM ĐANG CHIẾU' : 'PHIM SẮP CHIẾU';
+  const dbStatus = isNowPlaying ? 'NOW_PLAYING' : 'COMING_SOON';
 
   // State quản lý Trailer
   const [isTrailerOpen, setIsTrailerOpen] = useState(false);
-  const [currentTrailerUrl, setCurrentTrailerUrl] = useState<string | null>(
-    null,
-  );
+  const [currentTrailerUrl, setCurrentTrailerUrl] = useState<string | null>(null);
 
   // Hàm hứng link trailer từ MovieCard bắn lên
   const handlePlayTrailer = (url: string) => {
@@ -46,12 +44,10 @@ const MovieListPage = () => {
     const fetchMovies = async () => {
       try {
         setIsLoading(true);
-        const response = await fetchClient("/movies");
+        const response = await fetchClient('/movies');
 
         // Chỉ lấy những phim có status khớp với cái tab đang xem
-        const filteredMovies = response.data.filter(
-          (movie: Movie) => movie.status === dbStatus,
-        );
+        const filteredMovies = response.data.filter((movie: Movie) => movie.status === dbStatus);
         setMovies(filteredMovies);
       } catch (error) {
         if (error instanceof Error) toast.error(error.message);
@@ -93,8 +89,8 @@ const MovieListPage = () => {
                 key={movie.id}
                 id={movie.id}
                 title={movie.title}
-                genre={movie.filmGenres || "Đang cập nhật"}
-                posterUrl={movie.posterUrl || ""}
+                genre={movie.filmGenres || 'Đang cập nhật'}
+                posterUrl={movie.posterUrl || ''}
                 trailerUrl={movie.trailerUrl || undefined}
                 onPlayTrailer={handlePlayTrailer}
                 ageRating={movie.ageRating}

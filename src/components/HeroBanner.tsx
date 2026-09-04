@@ -1,12 +1,12 @@
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Autoplay, Pagination, Navigation } from "swiper/modules";
-import { Play, Ticket, Clock } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay, Pagination, Navigation } from 'swiper/modules';
+import { Play, Ticket, Clock } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 // Import CSS cốt lõi của Swiper
-import "swiper/css";
-import "swiper/css/pagination";
-import "swiper/css/navigation";
+import 'swiper/css';
+import 'swiper/css/pagination';
+import 'swiper/css/navigation';
 
 interface Movie {
   id: string;
@@ -52,7 +52,7 @@ const HeroBanner = ({ movies, onPlayTrailer }: HeroBannerProps) => {
             <div className="relative w-full h-full">
               {/* Ảnh Nền (Poster phim) */}
               <img
-                src={movie.backdropUrl || ""}
+                src={movie.backdropUrl || ''}
                 alt={movie.title}
                 className="w-full h-full object-cover object-top"
               />
@@ -76,13 +76,10 @@ const HeroBanner = ({ movies, onPlayTrailer }: HeroBannerProps) => {
                 {/* Thể loại & Thời lượng */}
                 <div className="flex flex-wrap items-center gap-4 text-slate-300 text-sm md:text-base font-medium mb-8">
                   <div className="flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-amber-500" />{" "}
-                    {movie.duration} Phút
+                    <Clock className="w-5 h-5 text-amber-500" /> {movie.duration} Phút
                   </div>
                   <span className="text-slate-600">|</span>
-                  <div className="text-amber-400 font-bold">
-                    {movie.filmGenres}
-                  </div>
+                  <div className="text-amber-400 font-bold">{movie.filmGenres}</div>
                 </div>
 
                 {/* Hai Nút Bấm */}
@@ -91,15 +88,15 @@ const HeroBanner = ({ movies, onPlayTrailer }: HeroBannerProps) => {
                     to={`/movies/${movie.id}`}
                     className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3.5 rounded-full font-bold transition-all transform hover:scale-105 bg-gradient-to-r from-amber-600 to-amber-500 text-white shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:shadow-amber-500/60"
                   >
-                    <Ticket className="w-5 h-5" />{" "}
+                    <Ticket className="w-5 h-5" />{' '}
                     <span className="hidden sm:inline">Đặt Vé Ngay</span>
                   </Link>
 
                   <button
-                    onClick={() => onPlayTrailer(movie.trailerUrl || "")}
+                    onClick={() => onPlayTrailer(movie.trailerUrl || '')}
                     className="flex items-center justify-center gap-2 px-6 sm:px-8 py-3.5 rounded-full font-bold transition-all transform hover:scale-105 border-2 border-slate-400 text-white hover:bg-slate-800 hover:border-white shadow-lg cursor-pointer"
                   >
-                    <Play className="w-5 h-5" />{" "}
+                    <Play className="w-5 h-5" />{' '}
                     <span className="hidden sm:inline">Xem Trailer</span>
                   </button>
                 </div>

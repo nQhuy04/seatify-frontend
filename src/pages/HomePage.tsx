@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react";
-import MovieCard from "../components/MovieCard";
-import QuickBooking from "../components/QuickBooking";
-import TrailerModal from "../components/TrailerModal";
-import HeroBanner from "../components/HeroBanner";
-import { fetchClient } from "../utils/apiClient";
-import { toast } from "sonner";
-import { Link } from "react-router-dom";
+import { useState, useEffect } from 'react';
+import MovieCard from '../components/MovieCard';
+import QuickBooking from '../components/QuickBooking';
+import TrailerModal from '../components/TrailerModal';
+import HeroBanner from '../components/HeroBanner';
+import { movieService } from '../services/movie.service';
+import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
 
 // 1. ĐỊNH NGHĨA KHUÔN DỮ LIỆU TỪ DATABASE
 // Dựa vào schema.prisma, khai báo để TypeScript hỗ trợ gợi ý code
@@ -17,20 +17,18 @@ interface Movie {
   backdropUrl: string | null;
   trailerUrl: string | null;
   ageRating: string;
-  status: "NOW_PLAYING" | "COMING_SOON" | "ARCHIVED";
+  status: 'NOW_PLAYING' | 'COMING_SOON' | 'ARCHIVED';
   duration: number;
 }
 
 const HomePage = () => {
-  // 2. KHỞI TẠO CÁC CÁI RỔ (STATE)
+  // 2. KHỞI TẠO CÁC STATE
   const [movies, setMovies] = useState<Movie[]>([]);
   const [isLoading, setIsLoading] = useState(true); // Trạng thái đang tải (Loading)
 
   // State quản lý Trailer
   const [isTrailerOpen, setIsTrailerOpen] = useState(false);
-  const [currentTrailerUrl, setCurrentTrailerUrl] = useState<string | null>(
-    null,
-  );
+  const [currentTrailerUrl, setCurrentTrailerUrl] = useState<string | null>(null);
 
   // Hàm hứng link trailer từ MovieCard bắn lên
   const handlePlayTrailer = (url: string) => {
@@ -43,7 +41,7 @@ const HomePage = () => {
     const loadMovies = async () => {
       try {
         // Dùng cỗ máy vận chuyển fetchClient gọi BE
-        const response = await fetchClient("/movies", { method: "GET" });
+        const response = await movieService.getAllMovie();
 
         // Cất data (mảng phim) vào rổ
         setMovies(response.data);
@@ -52,7 +50,7 @@ const HomePage = () => {
         if (error instanceof Error) {
           toast.error(error.message);
         } else {
-          toast.error("Không thể tải danh sách phim!");
+          toast.error('Không thể tải danh sách phim!');
         }
       } finally {
         // Dù thành công hay lỗi thì cũng phải tắt vòng xoay loading
@@ -64,21 +62,15 @@ const HomePage = () => {
   }, []); // <-- Cái mảng rỗng [] ở đây cực kỳ quan trọng, nó bảo React chỉ chạy 1 lần duy nhất!
 
   // 4. BÓC TÁCH DỮ LIỆU VÀ GIỚI HẠN 4 PHIM HIỂN THỊ LÊN TRANG CHỦ
-  const nowPlayingMovies = movies
-    .filter((m) => m.status === "NOW_PLAYING")
-    .slice(0, 4); // Chỉ lấy từ vị trí số 0 đến số 4
+  const nowPlayingMovies = movies.filter((m) => m.status === 'NOW_PLAYING').slice(0, 4); // Chỉ lấy từ vị trí số 0 đến số 4
 
-  const comingSoonMovies = movies
-    .filter((m) => m.status === "COMING_SOON")
-    .slice(0, 4); // Chỉ lấy 4 phim
+  const comingSoonMovies = movies.filter((m) => m.status === 'COMING_SOON').slice(0, 4); // Chỉ lấy 4 phim
 
   // 5. HIỂN THỊ MÀN HÌNH LOADING (UX)
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-950">
-        <div className="text-amber-500 text-2xl font-black animate-pulse">
-          ĐANG TẢI PHIM...
-        </div>
+        <div className="text-amber-500 text-2xl font-black animate-pulse">ĐANG TẢI PHIM...</div>
       </div>
     );
   }
@@ -100,9 +92,7 @@ const HomePage = () => {
         </div>
 
         {nowPlayingMovies.length === 0 ? (
-          <p className="text-center text-slate-500">
-            Chưa có phim nào đang chiếu.
-          </p>
+          <p className="text-center text-slate-500">Chưa có phim nào đang chiếu.</p>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
             {nowPlayingMovies.map((movie) => (
@@ -110,8 +100,8 @@ const HomePage = () => {
                 key={movie.id}
                 id={movie.id}
                 title={movie.title}
-                genre={movie.filmGenres || "Đang cập nhật"}
-                posterUrl={movie.posterUrl || ""}
+                genre={movie.filmGenres || 'Đang cập nhật'}
+                posterUrl={movie.posterUrl || ''}
                 ageRating={movie.ageRating}
                 duration={movie.duration}
                 trailerUrl={movie.trailerUrl || undefined}
@@ -140,9 +130,7 @@ const HomePage = () => {
         </div>
 
         {comingSoonMovies.length === 0 ? (
-          <p className="text-center text-slate-500">
-            Chưa có phim nào sắp chiếu.
-          </p>
+          <p className="text-center text-slate-500">Chưa có phim nào sắp chiếu.</p>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
             {comingSoonMovies.map((movie) => (
@@ -150,8 +138,8 @@ const HomePage = () => {
                 key={movie.id}
                 id={movie.id}
                 title={movie.title}
-                genre={movie.filmGenres || "Đang cập nhật"}
-                posterUrl={movie.posterUrl || ""}
+                genre={movie.filmGenres || 'Đang cập nhật'}
+                posterUrl={movie.posterUrl || ''}
                 ageRating={movie.ageRating}
                 duration={movie.duration}
                 trailerUrl={movie.trailerUrl || undefined}

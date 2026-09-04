@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { X } from 'lucide-react';
 
 interface TrailerModalProps {
   isOpen: boolean;
@@ -12,12 +12,11 @@ const TrailerModal = ({ isOpen, onClose, videoUrl }: TrailerModalProps) => {
   // Xử lý link YouTube để lấy ID video (Vì thẻ iframe cần link dạng /embed/ID)
   // Ví dụ link: https://www.youtube.com/watch?v=TcMBFSGVi1c
   const getEmbedUrl = (url: string | null) => {
-    if (!url) return "";
-    const regExp =
-      /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    if (!url) return '';
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
     const match = url.match(regExp);
     const videoId = match && match[2].length === 11 ? match[2] : null;
-    return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1` : "";
+    return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1` : '';
   };
 
   const embedUrl = getEmbedUrl(videoUrl);

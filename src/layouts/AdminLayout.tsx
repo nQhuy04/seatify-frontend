@@ -1,5 +1,5 @@
-import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import {
   LayoutDashboard,
   Film,
@@ -7,8 +7,8 @@ import {
   LogOut,
   Clapperboard,
   StepBackIcon,
-} from "lucide-react";
-import { toast } from "sonner";
+} from 'lucide-react';
+import { toast } from 'sonner';
 
 const AdminLayout = () => {
   const { user, logout } = useAuth();
@@ -17,25 +17,25 @@ const AdminLayout = () => {
 
   const handleLogout = () => {
     logout();
-    toast.success("Đã đăng xuất khỏi hệ thống quản trị!");
-    navigate("/");
+    toast.success('Đã đăng xuất khỏi hệ thống quản trị!');
+    navigate('/');
   };
 
   // Mảng chứa các menu để render cho lẹ
   const menuItems = [
     {
-      name: "Tổng Quan",
-      path: "/admin",
+      name: 'Tổng Quan',
+      path: '/admin',
       icon: <LayoutDashboard className="w-5 h-5" />,
     },
     {
-      name: "Quản Lý Phim",
-      path: "/admin/movies",
+      name: 'Quản Lý Phim',
+      path: '/admin/movies',
       icon: <Film className="w-5 h-5" />,
     },
     {
-      name: "Quản Lý Suất Chiếu",
-      path: "/admin/showtimes",
+      name: 'Quản Lý Suất Chiếu',
+      path: '/admin/showtimes',
       icon: <CalendarDays className="w-5 h-5" />,
     },
   ];
@@ -60,9 +60,7 @@ const AdminLayout = () => {
             {user?.fullName.charAt(0).toUpperCase()}
           </div>
           <div className="overflow-hidden">
-            <p className="text-white font-bold text-sm truncate">
-              {user?.fullName}
-            </p>
+            <p className="text-white font-bold text-sm truncate">{user?.fullName}</p>
             <p className="text-amber-500 text-xs font-bold">Quản Trị Viên</p>
           </div>
         </div>
@@ -78,8 +76,8 @@ const AdminLayout = () => {
                 to={item.path}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-colors ${
                   isActive
-                    ? "bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20"
-                    : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                    ? 'bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20'
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                 }`}
               >
                 {item.icon}
