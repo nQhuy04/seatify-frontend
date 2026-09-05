@@ -202,93 +202,91 @@ const MovieDetailPage = () => {
   return (
     <div className="-mt-8">
       {/* KHỐI 1: BACKGROUND VÀ THÔNG TIN PHIM */}
-      <div className="w-full py-16 md:py-24 bg-slate-950">
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="flex flex-col md:flex-row gap-10">
-            {/* Cột trái: Poster */}
-            <div className="w-full md:w-1/3 lg:w-1/4 shrink-0">
-              <div className="rounded-2xl overflow-hidden shadow-2xl shadow-amber-500/10 border border-slate-800 relative">
-                <img
-                  src={movie.posterUrl || ''}
-                  alt={movie.title}
-                  className="w-full h-auto object-cover"
-                />
-                <div className="absolute top-3 left-3 bg-amber-500 text-slate-950 text-sm font-black px-3 py-1 rounded shadow-md">
-                  {movie.ageRating}
+      <div className=" w-full py-16 md:py-24 container mx-auto px-4 relative z-10">
+        <div className="flex flex-col md:flex-row gap-10">
+          {/* Cột trái: Poster */}
+          <div className="w-full md:w-1/3 lg:w-1/4 shrink-0">
+            <div className="rounded-2xl overflow-hidden shadow-2xl shadow-amber-500/10 border border-slate-800 relative">
+              <img
+                src={movie.posterUrl || ''}
+                alt={movie.title}
+                className="w-full h-auto object-cover"
+              />
+              <div className="absolute top-3 left-3 bg-amber-500 text-slate-950 text-sm font-black px-3 py-1 rounded shadow-md">
+                {movie.ageRating}
+              </div>
+            </div>
+          </div>
+
+          {/* Cột phải: Thông tin */}
+          <div className="w-full md:w-2/3 lg:w-3/4 flex flex-col justify-center">
+            <h1 className="text-4xl md:text-5xl font-black text-white uppercase tracking-wider mb-2">
+              {movie.title}
+            </h1>
+            <p className="text-xl text-slate-400 font-medium italic mb-8">{movie.title}</p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 mb-8 mt-6">
+              {movie.filmGenres && (
+                <div className="flex items-center gap-3 text-slate-300">
+                  <Tags className="w-5 h-5 text-amber-500 shrink-0" />
+                  <span className="font-semibold">{movie.filmGenres}</span>
                 </div>
+              )}
+              <div className="flex items-center gap-3 text-slate-300">
+                <Clock className="w-5 h-5 text-amber-500 shrink-0" />
+                <span className="font-semibold">{movie.duration} Phút</span>
+              </div>
+              {movie.country && (
+                <div className="flex items-center gap-3 text-slate-300">
+                  <Globe className="w-5 h-5 text-amber-500 shrink-0" />
+                  <span className="font-semibold">{movie.country}</span>
+                </div>
+              )}
+              {movie.language && (
+                <div className="flex items-center gap-3 text-slate-300">
+                  <MessageCircle className="w-5 h-5 text-amber-500 shrink-0" />
+                  <span className="font-semibold">{movie.language}</span>
+                </div>
+              )}
+              <div className="flex items-start gap-3 text-slate-300 sm:col-span-2 bg-amber-500/10 p-3 rounded-lg border border-amber-500/20 mt-2">
+                <UserCheck className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                <span className="text-sm text-amber-400 font-medium leading-relaxed">
+                  Phân loại: {getAgeDescription(movie.ageRating)}
+                </span>
               </div>
             </div>
 
-            {/* Cột phải: Thông tin */}
-            <div className="w-full md:w-2/3 lg:w-3/4 flex flex-col justify-center">
-              <h1 className="text-4xl md:text-5xl font-black text-white uppercase tracking-wider mb-2">
-                {movie.title}
-              </h1>
-              <p className="text-xl text-slate-400 font-medium italic mb-8">{movie.title}</p>
+            <div className="space-y-4 mb-8 text-sm md:text-base">
+              <p>
+                <span className="text-slate-500 font-semibold">Đạo diễn:</span>{' '}
+                <span className="text-white font-medium">{movie.director}</span>
+              </p>
+              <p>
+                <span className="text-slate-500 font-semibold">Diễn viên:</span>{' '}
+                <span className="text-white font-medium">{movie.cast}</span>
+              </p>
+              <p>
+                <span className="text-slate-500 font-semibold">Khởi chiếu:</span>{' '}
+                <span className="text-white font-medium">
+                  {movie.releaseDate
+                    ? new Date(movie.releaseDate).toLocaleDateString('vi-VN')
+                    : 'Đang cập nhật'}
+                </span>
+              </p>
+            </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 mb-8 mt-6">
-                {movie.filmGenres && (
-                  <div className="flex items-center gap-3 text-slate-300">
-                    <Tags className="w-5 h-5 text-amber-500 shrink-0" />
-                    <span className="font-semibold">{movie.filmGenres}</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-3 text-slate-300">
-                  <Clock className="w-5 h-5 text-amber-500 shrink-0" />
-                  <span className="font-semibold">{movie.duration} Phút</span>
-                </div>
-                {movie.country && (
-                  <div className="flex items-center gap-3 text-slate-300">
-                    <Globe className="w-5 h-5 text-amber-500 shrink-0" />
-                    <span className="font-semibold">{movie.country}</span>
-                  </div>
-                )}
-                {movie.language && (
-                  <div className="flex items-center gap-3 text-slate-300">
-                    <MessageCircle className="w-5 h-5 text-amber-500 shrink-0" />
-                    <span className="font-semibold">{movie.language}</span>
-                  </div>
-                )}
-                <div className="flex items-start gap-3 text-slate-300 sm:col-span-2 bg-amber-500/10 p-3 rounded-lg border border-amber-500/20 mt-2">
-                  <UserCheck className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-                  <span className="text-sm text-amber-400 font-medium leading-relaxed">
-                    Phân loại: {getAgeDescription(movie.ageRating)}
-                  </span>
-                </div>
-              </div>
+            <div className="mb-8">
+              <h3 className="text-xl font-bold text-white mb-3">NỘI DUNG PHIM</h3>
+              <p className="text-slate-400 leading-relaxed text-justify">{movie.description}</p>
+            </div>
 
-              <div className="space-y-4 mb-8 text-sm md:text-base">
-                <p>
-                  <span className="text-slate-500 font-semibold">Đạo diễn:</span>{' '}
-                  <span className="text-white font-medium">{movie.director}</span>
-                </p>
-                <p>
-                  <span className="text-slate-500 font-semibold">Diễn viên:</span>{' '}
-                  <span className="text-white font-medium">{movie.cast}</span>
-                </p>
-                <p>
-                  <span className="text-slate-500 font-semibold">Khởi chiếu:</span>{' '}
-                  <span className="text-white font-medium">
-                    {movie.releaseDate
-                      ? new Date(movie.releaseDate).toLocaleDateString('vi-VN')
-                      : 'Đang cập nhật'}
-                  </span>
-                </p>
-              </div>
-
-              <div className="mb-8">
-                <h3 className="text-xl font-bold text-white mb-3">NỘI DUNG PHIM</h3>
-                <p className="text-slate-400 leading-relaxed text-justify">{movie.description}</p>
-              </div>
-
-              <div>
-                <button
-                  onClick={() => setIsTrailerOpen(true)}
-                  className="flex items-center gap-2 px-8 py-3.5 rounded-full font-bold transition-all transform hover:scale-105 border-2 border-slate-600 text-white hover:bg-slate-800 hover:border-slate-500 shadow-lg cursor-pointer"
-                >
-                  <Play className="w-5 h-5" /> Xem Trailer
-                </button>
-              </div>
+            <div>
+              <button
+                onClick={() => setIsTrailerOpen(true)}
+                className="flex items-center gap-2 px-8 py-3.5 rounded-full font-bold transition-all transform hover:scale-105 border-2 border-slate-600 text-white hover:bg-slate-800 hover:border-slate-500 shadow-lg cursor-pointer"
+              >
+                <Play className="w-5 h-5" /> Xem Trailer
+              </button>
             </div>
           </div>
         </div>

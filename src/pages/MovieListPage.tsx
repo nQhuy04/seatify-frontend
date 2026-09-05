@@ -15,6 +15,8 @@ interface Movie {
   ageRating: string;
   status: 'NOW_PLAYING' | 'COMING_SOON' | 'ARCHIVED';
   duration: number;
+  country: string | null;
+  language: string | null;
 }
 
 const MovieListPage = () => {
@@ -95,6 +97,8 @@ const MovieListPage = () => {
                 onPlayTrailer={handlePlayTrailer}
                 ageRating={movie.ageRating}
                 duration={movie.duration}
+                country={movie.country || 'Đang cập nhật'}
+                language={movie.language || 'Đang cập nhật'}
               />
             ))}
           </div>

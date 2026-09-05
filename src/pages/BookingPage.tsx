@@ -10,6 +10,7 @@ import { showtimeService } from '../services/showtime.service';
 
 // Định nghĩa khuôn thông tin Suất chiếu
 interface ShowtimeInfo {
+  startTime: string;
   movie: {
     title: string;
     ageRating: string;
@@ -256,12 +257,40 @@ const BookingPage = () => {
     <div className="py-12 pb-40">
       <div className="container mx-auto px-4 max-w-6xl">
         <div className="text-center mb-12">
-          <h1 className="text-3xl font-black text-white uppercase tracking-wider mb-2">
+          <h1 className="text-3xl font-black text-white uppercase tracking-wider mb-4">
             ĐẶT VÉ TRỰC TUYẾN
           </h1>
-          <p className="text-slate-400">
-            Suất chiếu ID: <span className="text-amber-500 font-bold">{showtimeId}</span>
-          </p>
+
+          {/* HIỂN THỊ THÔNG TIN SUẤT CHIẾU BẰNG DATA THẬT */}
+          {showtimeInfo ? (
+            <div className="flex flex-col items-center justify-center space-y-1">
+              <h2 className="text-2xl font-bold text-amber-500 uppercase tracking-wide">
+                {showtimeInfo.movie.title}
+              </h2>
+              <p className="text-slate-300 font-medium text-lg">
+                {showtimeInfo.room.cinema.name} - {showtimeInfo.room.name}
+              </p>
+              <div className="flex items-center gap-2 mt-2 text-slate-400 bg-slate-900 px-4 py-1.5 rounded-full border border-slate-800">
+                <span>Suất chiếu:</span>
+                <span className="text-white font-bold">
+                  {new Date(showtimeInfo.startTime).toLocaleTimeString('vi-VN', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </span>
+                <span>-</span>
+                <span className="text-white font-bold">
+                  {new Date(showtimeInfo.startTime).toLocaleDateString('vi-VN')}
+                </span>
+              </div>
+            </div>
+          ) : (
+            // Hiệu ứng khung xương (Skeleton) khi đang chờ data API
+            <div className="animate-pulse flex flex-col items-center space-y-3 mt-4">
+              <div className="h-6 w-64 bg-slate-800/50 rounded-full"></div>
+              <div className="h-4 w-48 bg-slate-800/50 rounded-full"></div>
+            </div>
+          )}
         </div>
 
         {/* --- KHU VỰC 1: CHỌN LOẠI VÉ --- */}

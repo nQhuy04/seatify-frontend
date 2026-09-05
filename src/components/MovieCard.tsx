@@ -21,9 +21,9 @@ const MovieCard = ({
   genre,
   posterUrl,
   ageRating,
-  duration = 120,
-  country = 'Mỹ',
-  language = 'Phụ đề Tiếng Việt',
+  duration,
+  country,
+  language,
   trailerUrl,
   onPlayTrailer,
 }: MovieCardProps) => {
@@ -60,11 +60,11 @@ const MovieCard = ({
             </li>
             <li className="flex items-center gap-3">
               <Globe className="w-5 h-5 text-amber-500" />
-              <span>{country}</span>
+              <span>{country || 'Đang cập nhật'}</span>
             </li>
             <li className="flex items-center gap-3">
               <MessageCircle className="w-5 h-5 text-amber-500" />
-              <span>{language}</span>
+              <span>{language || 'Đang cập nhật'}</span>
             </li>
           </ul>
         </div>
